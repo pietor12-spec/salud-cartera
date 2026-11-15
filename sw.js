@@ -1,5 +1,5 @@
 /* Salud de mi cartera · service worker: funciona sin conexión */
-const CACHE = "salud-cartera-v2";
+const CACHE = "salud-cartera-v3";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "logo.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png", "favicon-32.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

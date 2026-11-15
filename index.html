@@ -8,9 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/svg+xml" href="logo.svg">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="icons/logo.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Salud cartera">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -324,10 +324,7 @@ svg text{font-family:var(--mono)}
 
 .closebtn{top:10px;right:10px}
 .pnlov .pnltabs{padding-right:52px}
-/* Resumen: bloque centrado en la pantalla */
-@media(min-width:821px){
- .hero{min-height:calc(100vh - 140px);align-content:center}
-}
+
 .gscore b{color:inherit}
 .gglobal{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
 .ghr.gglobal{grid-template-columns:96px minmax(0,1fr) 72px}
@@ -338,6 +335,45 @@ svg text{font-family:var(--mono)}
 .cchart.narrow .carea{margin-bottom:86px}
 .cchart.narrow .clab span{writing-mode:vertical-rl;transform:rotate(180deg);max-height:80px;font-size:10px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
+/* Título de la app y cabecera de Resumen */
+.ttl b{font-size:24px;letter-spacing:.01em}
+.reshd{font-size:19px;color:var(--ink);grid-column:1/-1;margin:0 0 -4px}
+/* KPIs: sin raya de color y centrados */
+.hero .kpi{border-top:1px solid var(--line)!important;align-items:center;text-align:center;justify-content:center;position:relative}
+.kpirent .l2.keep{font-family:var(--mono);font-size:14px}
+.ktog{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--accent);font-size:15px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.ktog:hover{border-color:var(--accent)}
+/* Nota global: más aire */
+.gglobal{margin-top:16px;padding-top:16px}
+/* Ganancias y pérdidas: título separado de los botones */
+.pnlov .panel > h3{margin-bottom:16px}
+/* Web: todo en una pantalla, KPIs a los lados del rosco */
+@media(min-width:821px){
+ .hero{grid-template-columns:minmax(0,1fr) minmax(0,2.2fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto auto minmax(0,1fr);gap:12px 14px;align-items:stretch;min-height:calc(100vh - 196px)}
+ .reshd{grid-row:1}
+ .hero > .kpis{display:contents}
+ .hero > .panel{grid-column:2;grid-row:3/6;display:flex;flex-direction:column;justify-content:center}
+ .hero .kpi{padding:12px}
+ .hero .kpi:nth-child(1){grid-column:1;grid-row:3}.hero .kpi:nth-child(2){grid-column:1;grid-row:4}.hero .kpi:nth-child(5){grid-column:1;grid-row:5}
+ .hero .kpi:nth-child(3){grid-column:3;grid-row:3}.hero .kpi:nth-child(4){grid-column:3;grid-row:4}.hero .kpi:nth-child(6){grid-column:3;grid-row:5}
+ .hero .kpi .l2:not(.keep){display:none}
+ .hero #donut{max-width:220px}
+ .hero .healthbox{grid-template-columns:minmax(170px,220px) minmax(0,1fr)}
+}
+/* Móvil: el gráfico abierto se ve girado, en horizontal */
+.pnlov.land{inset:auto;top:0;left:100vw;width:100vh;width:100dvh;height:100vw;transform-origin:top left;transform:rotate(90deg)}
+.pnlov.cmp{padding:6px}
+.pnlov.cmp .panel{padding:10px 12px}
+.pnlov.cmp .panel > h3{font-size:15px;margin-bottom:8px}
+.pnlov.cmp .pnltabs{margin-bottom:4px}
+.pnlov.cmp .pnltot{padding:0 0 6px;margin-bottom:6px;gap:2px 24px}
+.pnlov.cmp .pstat b{font-size:17px}
+.pnlov.cmp .pcount{display:none}
+.pnlov.cmp .panel > h3{display:none}
+.pnlov.cmp .pnltabs{padding-right:46px}
+.pnlov.cmp .closebtn{top:6px;right:6px;width:34px;height:34px}
+.pnlov.cmp .chip{min-height:28px;padding:3px 10px;font-size:12px}
+
 </style>
 </head>
 <body>
@@ -346,13 +382,14 @@ svg text{font-family:var(--mono)}
 <div class="topbar">
   <div class="tbin">
     <button class="ibtn heart" id="menuBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="menu" title="Pestañas"><svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path d="M16 28s-11-6.6-11-15A6.2 6.2 0 0 1 16 9a6.2 6.2 0 0 1 11 4c0 8.4-11 15-11 15z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M6 16h5l2-4 3 8 2.5-6 1.5 2h6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <div class="ttl"><b>Salud de mi cartera</b><span id="tabName">Resumen</span></div>
+    <div class="ttl"><b>Salud de mi cartera</b><span id="tabName" hidden>Resumen</span></div>
     <button class="ibtn" id="fsBtn" title="Pantalla completa" aria-label="Pantalla completa"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path id="fsIco" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
   </div>
   <nav class="menu" id="menu" role="menu" hidden><button class="mitem" role="menuitem" data-go="resumen"><span class="mi">◎</span>Resumen</button><button class="mitem" role="menuitem" data-go="plan"><span class="mi">⇄</span>Plan</button><button class="mitem" role="menuitem" data-go="grupos"><span class="mi">▦</span>Tus grupos y watchlist</button><button class="mitem" role="menuitem" data-go="calor"><span class="mi">▤</span>Mapa de calor</button><button class="mitem" role="menuitem" data-go="sectores"><span class="mi">◐</span>Sectores y países</button><button class="mitem" role="menuitem" data-go="diag"><span class="mi">✚</span>Diagnóstico</button><button class="mitem" role="menuitem" data-go="guia"><span class="mi">?</span>Cómo se calcula</button><button class="mitem" role="menuitem" data-go="datos"><span class="mi">⇅</span>Datos</button></nav>
 </div>
 
 <section class="hero" data-tab="resumen">
+  <h2 class="reshd">Resumen</h2>
   <div class="panel">
     <h3 style="font-size:18px;margin-bottom:2px">Salud de la cartera</h3><div class="kicker" style="margin-bottom:10px">Acciones que te quedas, por valor</div>
     <div class="healthbox">
@@ -584,10 +621,14 @@ function drawKPIs(){kbox.textContent='';
  pScore=(()=>{const s=P.filter(r=>r.score!=null&&pv(r)>0);return sum(s,r=>r.score*pv(r))/sum(s,pv);})();
  const DV=KEPT.filter(r=>r.grp==='Dividendera');const PI=sum(P,r=>(r.inv||0)+(r.alloc||0))+D.plan.rest;
  const KI=sum(KEPT,r=>r.inv),KG=sum(KEPT,r=>r.valor-r.inv),KD=sum(KEPT,r=>r.dg||0),KR=(KG+KD)/KI;const pcs=v=>(v>=0?'+':'−')+Math.abs(v*100).toLocaleString('es-ES',{minimumFractionDigits:1,maximumFractionDigits:1})+' %';
- kbox.append(kpi('Valor cotización actual',fmtE(PT),`Invertido: ${fmtE(PI)}`),
-  el('div',{class:'panel kpi',style:`border-top:3px solid ${KR>=0?C.good:C.bad}`},el('div',{class:'l'},'Rentabilidad con dividendos'),el('div',{class:'v',style:`color:${KR>=0?C.good:C.bad}`},pcs(KR)),el('div',{class:'l2'},`${KG+KD>=0?'+':'−'}${fmtE(Math.abs(KG+KD))} · sin dividendos ${pcs(KG/KI)}`)),
-  kpi('Growth',fmtE(sum(pG,pv)),`${Math.round(sum(pG,pv)/PT*100)} % de la cartera`,GC.Growth),
-  kpi('Dividenderas',fmtE(sum(pD,pv)),`${Math.round(sum(pD,pv)/PT*100)} % de la cartera`,GC.Dividendera),
+ const rk=el('div',{class:'panel kpi kpirent'});let rsin=false;
+ const drawRK=()=>{const g=rsin?KG:KG+KD,col=g>=0?C.good:C.bad;rk.textContent='';
+  rk.append(el('button',{class:'ktog',title:rsin?'Ver con dividendos':'Ver sin dividendos','aria-label':rsin?'Ver con dividendos':'Ver sin dividendos',onclick:()=>{rsin=!rsin;drawRK();}},'⇄'),
+   el('div',{class:'l'},rsin?'Rent. sin div.':'Rent. con div.'),el('div',{class:'v',style:`color:${col}`},pcs(g/KI)),
+   el('div',{class:'l2 keep',style:`color:${col}`},(g>=0?'+':'−')+fmtE(Math.abs(g))));};drawRK();
+ kbox.append(kpi('Valor',fmtE(PT),`Invertido: ${fmtE(PI)}`),rk,
+  kpi('Growth',fmtE(sum(pG,pv)),`${Math.round(sum(pG,pv)/PT*100)} % de la cartera`),
+  kpi('Dividenderas',fmtE(sum(pD,pv)),`${Math.round(sum(pD,pv)/PT*100)} % de la cartera`),
   kpi('DYOC',((sum(DV,r=>r.dg||0)/sum(DV,r=>r.inv))*100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' %'),
   kpi('Acciones',String(P.length)));
  const gs=document.getElementById('gScore');if(gs){gs.textContent=Math.round(pScore)+'/100';gs.style.color=pScore>=75?C.good:pScore>=55?C.warn:C.bad;}}
@@ -823,7 +864,7 @@ if(!fsOk||!(de.requestFullscreen||de.webkitRequestFullscreen)||scMovil||scStanda
   const top=x=>Math.max(0,x.p)+x.pd,bot=x=>Math.max(0,-x.p);
   const tops=L.map(top).sort((a,b)=>b-a),pmaxR=tops[0]||0,pmax=(tops.length>1&&pmaxR>tops[1]*1.35)?tops[1]*1.35:pmaxR,nmax=Math.max(0,...L.map(bot)),span=(pmax+nmax)||1;
   const W=chart.clientWidth||900,cw=W/L.length,narrow=cw<46,tiny=cw<13;
-  const PH=window.SC_FIT?Math.max(150,Math.min(460,(window.SC_FIT()-chart.getBoundingClientRect().top)-(narrow?72:32)-(narrow&&mode==='sec'?88:46)-(nmax&&!tiny?(narrow?46:36):6))):300,zt=pmax/span*PH,xb=(nmax&&!tiny)?(narrow?46:36):6;
+  const PH=window.SC_FIT?Math.max(130,Math.min(460,(window.SC_FIT()-(window.SC_TOP?SC_TOP(chart):chart.getBoundingClientRect().top))-(narrow?72:32)-(narrow&&mode==='sec'?88:46)-(nmax&&!tiny?(narrow?46:36):6))):300,zt=pmax/span*PH,xb=(nmax&&!tiny)?(narrow?46:36):6;
   chart.textContent='';chart.classList.toggle('narrow',narrow&&mode==='sec');chart.classList.toggle('narrowv',narrow);chart.style.paddingTop=tiny?'10px':'';
   const area=el('div',{class:'carea',style:`height:${PH+xb}px`});area.append(el('i',{class:'czero',style:`top:${zt}px`}));chart.append(area);
   const labs=el('div',{class:'clabs'});chart.append(labs);
@@ -843,7 +884,12 @@ if(!fsOk||!(de.requestFullscreen||de.webkitRequestFullscreen)||scMovil||scStanda
  const pnl=document.getElementById('secPnl').closest('section');
   if(opt==='B'){pnl.hidden=true;pnl.dataset.tab='x';const hb=document.querySelector('.hero .panel');hb.style.position='relative';
   const ov=el('div',{class:'pnlov',hidden:''});document.body.append(ov);
-  hb.append(el('button',{class:'ibtn expbtn',title:'Ver ganancias y pérdidas a pantalla completa',onclick:()=>{ov.hidden=false;ov.append(pnl);pnl.hidden=false;window.SC_FIT=()=>innerHeight-30;scPnlDraw();}},'⤢'));
+  // En el móvil en vertical, el gráfico se abre girado (en horizontal)
+  const land=()=>scMovil&&innerHeight>innerWidth;
+  const fit=()=>{const l=land();ov.classList.toggle('land',l);ov.classList.toggle('cmp',scMovil);window.SC_FIT=l?()=>innerWidth-14:scMovil?()=>innerHeight-14:()=>innerHeight-30;
+   window.SC_TOP=l?(c=>{let y=0,e=c;while(e&&e!==ov){y+=e.offsetTop;e=e.offsetParent;}return y;}):null;};
+  hb.append(el('button',{class:'ibtn expbtn',title:'Ver ganancias y pérdidas a pantalla completa',onclick:()=>{ov.hidden=false;ov.append(pnl);pnl.hidden=false;fit();scPnlDraw();}},'⤢'));
+  window.addEventListener('resize',()=>{if(!ov.hidden)fit();});
   ov.addEventListener('click',e=>{if(e.target===ov){ov.hidden=true;}});
   pnl.querySelector('.panel').prepend(el('button',{class:'ibtn closebtn',onclick:()=>{ov.hidden=true;}},'✕'));}})();
 
