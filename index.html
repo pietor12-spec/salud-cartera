@@ -396,6 +396,7 @@ svg text{font-family:var(--mono)}
     <div class="panel"><h3 style="font-size:17px">Exportar</h3><p class="note">Descarga un archivo JSON con todos los datos del informe y tus empresas marcadas de la watchlist.</p><button class="bigbtn" id="expBtn">⬇ Exportar JSON</button></div>
     <div class="panel"><h3 style="font-size:17px">Importar</h3><p class="note">Carga un JSON exportado de aquí (o el que genere la actualización mensual). Sustituye los datos de este dispositivo.</p><label class="bigbtn" for="impFile">⬆ Importar JSON</label><input type="file" id="impFile" accept="application/json,.json" hidden><p class="note" id="impMsg" style="margin-top:10px"></p></div>
     <div class="panel insbox" hidden></div>
+    <div class="panel syncbox" hidden></div>
     <div class="panel" style="grid-column:1/-1"><h3 style="font-size:17px">Datos en uso</h3><p class="note" id="dataInfo"></p><button class="bigbtn ghost" id="resetBtn" hidden>↺ Volver a los datos originales</button></div>
   </div>
 </section>
@@ -430,17 +431,56 @@ function scNoData(){
  document.querySelectorAll('#wrap > section').forEach(s=>s.hidden=true);
  const mb=document.getElementById('menuBtn');if(mb)mb.disabled=true;
  const t=document.getElementById('tabName');if(t)t.textContent='Primeros pasos';
- const fs=document.getElementById('fsBtn');if(fs&&(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||scStandalone()||!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen)))fs.hidden=true;
+ const fs=document.getElementById('fsBtn');if(fs)fs.hidden=true;
  const s=document.createElement('section');s.className='grid two';s.style.marginTop='8px';
- s.innerHTML='<div class="panel"><h3 style="font-size:17px">Importa tus datos</h3><p class="note">Esta app no guarda tus datos en internet. Se quedan en este dispositivo. Carga el JSON de «Salud de mi cartera» para empezar.</p><label class="bigbtn" for="impFile0">⬆ Importar JSON</label><input type="file" id="impFile0" accept="application/json,.json" hidden><p class="note" id="impMsg0" style="margin-top:10px"></p></div><div class="panel insbox" hidden></div>';
- const tb=document.querySelector('#wrap > .topbar');if(tb)tb.after(s);else document.getElementById('wrap').prepend(s);scInsDraw();
+ s.innerHTML='<div class="panel"><h3 style="font-size:17px">Importa tus datos</h3><p class="note">Esta app no guarda tus datos en internet. Se quedan en este dispositivo. Carga el JSON de «Salud de mi cartera» para empezar.</p><label class="bigbtn" for="impFile0">⬆ Importar JSON</label><input type="file" id="impFile0" accept="application/json,.json" hidden><p class="note" id="impMsg0" style="margin-top:10px"></p></div><div class="panel insbox" hidden></div><div class="panel syncbox" style="grid-column:1/-1" hidden></div>';
+ const tb=document.querySelector('#wrap > .topbar');if(tb)tb.after(s);else document.getElementById('wrap').prepend(s);scInsDraw();scSyncBox();
  document.getElementById('impFile0').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();const m=document.getElementById('impMsg0');
   rd.onload=()=>{try{const o=JSON.parse(rd.result);const d=o&&o.datos?o.datos:o;
    if(!d||!Array.isArray(d.rows)||!Array.isArray(d.wl)||!d.plan)throw new Error('El archivo no tiene el formato de este informe.');
-   localStorage.setItem('salud-cartera-data',JSON.stringify(d));if(o&&Array.isArray(o.watchlist))localStorage.setItem('salud-cartera-wl',JSON.stringify(o.watchlist));
+   localStorage.setItem('salud-cartera-data',JSON.stringify(d));if(o&&Array.isArray(o.watchlist))localStorage.setItem('salud-cartera-wl',JSON.stringify(o.watchlist));localStorage.setItem('salud-cartera:rev',String(Date.now()));
    m.style.color='#00FFA3';m.textContent='Importado: '+d.rows.length+' acciones. Cargando…';setTimeout(()=>{location.hash='resumen';location.reload();},600);
   }catch(err){m.style.color='#FF5470';m.textContent='No se pudo importar: '+(err.message||err);}e.target.value='';};rd.readAsText(f);});
 }
+// ---- Sincronización con GitHub (Gist privado), como el Dividend Tracker
+const SCG={TK:'salud-cartera:gh-token',TK2:'tracker:dividendos:gh-token',GK:'salud-cartera:gh-gist',RK:'salud-cartera:rev',FILE:'salud-cartera.json',API:'https://api.github.com',id:null,t:null,
+ ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){return null;}},
+ token(){return this.ls(this.TK)||this.ls(this.TK2)||'';},
+ fromTracker(){return !this.ls(this.TK)&&!!this.ls(this.TK2);},
+ api(p,o){o=o||{};const h=Object.assign({'Authorization':'Bearer '+this.token(),'Accept':'application/vnd.github+json'},o.headers||{});return fetch(this.API+p,Object.assign({cache:'no-store'},o,{headers:h}));},
+ async fail(r){if(r.status===401)throw new Error('La clave de GitHub no es válida o ha caducado');if(r.status===403||r.status===404)throw new Error('La clave no tiene permiso «gist»');throw new Error('GitHub respondió '+r.status);},
+ async find(){let id=this.ls(this.GK);if(id){const r=await this.api('/gists/'+id);if(r.ok)return id;if(r.status===401)return this.fail(r);}
+  for(let p=1;p<=10;p++){const r=await this.api('/gists?per_page=100&page='+p);if(!r.ok)return this.fail(r);const l=await r.json();const g=l.find(x=>x.files&&x.files[this.FILE]);if(g){this.ls(this.GK,g.id);return g.id;}if(l.length<100)break;}return null;},
+ async pull(){this.id=await this.find();if(!this.id)return null;const r=await this.api('/gists/'+this.id);if(!r.ok)return this.fail(r);const j=await r.json();const f=j.files&&j.files[this.FILE];if(!f)return null;
+  const txt=f.truncated?await fetch(f.raw_url,{cache:'no-store'}).then(x=>x.text()):f.content;try{return JSON.parse(txt);}catch(e){return null;}},
+ local(){let d=null,w=null;try{d=JSON.parse(this.ls('salud-cartera-data'));w=JSON.parse(this.ls('salud-cartera-wl'));}catch(e){}if(!d||!Array.isArray(d.rows))return null;return {app:'salud-cartera',version:1,rev:+(this.ls(this.RK)||0),watchlist:Array.isArray(w)?w:null,datos:d};},
+ async push(env){const body=JSON.stringify({description:'Salud de mi cartera · datos (no borrar)',public:false,files:{[this.FILE]:{content:JSON.stringify(env)}}});
+  if(!this.id)this.id=await this.find();
+  const r=this.id?await this.api('/gists/'+this.id,{method:'PATCH',headers:{'Content-Type':'application/json'},body}):await this.api('/gists',{method:'POST',headers:{'Content-Type':'application/json'},body});
+  if(!r.ok)return this.fail(r);if(!this.id){this.id=(await r.json()).id;this.ls(this.GK,this.id);}},
+ setStatus(txt,ok){window.SC_SYNC={txt,ok,at:new Date()};document.querySelectorAll('.syncst').forEach(e=>{e.textContent=txt;e.style.color=ok===false?'#FF5470':ok?'#00FFA3':'#8A9BB8';});},
+ async sync(){if(!window.SC_PWA)return;if(!this.token()){this.setStatus('Sin clave de GitHub: los datos solo están en este dispositivo.',null);return;}
+  this.setStatus('Sincronizando con GitHub…',null);
+  try{const rem=await this.pull();const loc=this.local();const rr=rem&&+rem.rev||0,lr=loc?loc.rev:0;
+   if(rem&&rem.datos&&Array.isArray(rem.datos.rows)&&(!loc||rr>lr)){
+    this.ls('salud-cartera-data',JSON.stringify(rem.datos));if(Array.isArray(rem.watchlist))this.ls('salud-cartera-wl',JSON.stringify(rem.watchlist));this.ls(this.RK,String(rr));
+    this.setStatus('Datos recibidos de GitHub. Cargando…',true);setTimeout(()=>location.reload(),300);return;}
+   if(loc&&(!rem||lr>rr)){if(!lr){loc.rev=Date.now();this.ls(this.RK,String(loc.rev));}await this.push(loc);}
+   const h=new Date();this.setStatus('✓ Sincronizado con GitHub a las '+h.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),true);
+  }catch(e){this.setStatus('No se pudo sincronizar: '+(e.message||e),false);}},
+ pushSoon(){this.ls(this.RK,String(Date.now()));clearTimeout(this.t);this.t=setTimeout(()=>this.sync(),1500);}};
+window.scPushSoon=()=>SCG.pushSoon();
+function scSyncBox(){document.querySelectorAll('.syncbox').forEach(box=>{box.hidden=!window.SC_PWA;if(!window.SC_PWA)return;
+ const has=!!SCG.token();
+ box.innerHTML='<h3 style="font-size:17px">☁ Guardado en GitHub</h3><p class="note">Tus datos se guardan en un Gist privado de tu cuenta, como el Dividend Tracker. Así salen igual en el móvil y en el ordenador.</p><p class="note syncst" style="font-weight:600"></p>'+
+  (has&&SCG.fromTracker()?'<p class="note">Usa la misma clave que tu Dividend Tracker.</p>':'')+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><input type="password" class="tokin" placeholder="'+(has?'Clave guardada · pega otra para cambiarla':'Pega tu clave de GitHub (permiso gist)')+'" autocomplete="off" style="flex:1;min-width:200px;min-height:44px;padding:0 12px;border-radius:10px;border:1px solid #22324F;background:#15223B;color:#E6EEFA;font:inherit">'+
+  '<button class="bigbtn" data-sync="save" style="margin-top:0">Guardar clave</button>'+(has?'<button class="bigbtn ghost" data-sync="now" style="margin-top:0">↻ Sincronizar ahora</button>':'')+'</div>';});
+ if(window.SC_SYNC)SCG.setStatus(window.SC_SYNC.txt,window.SC_SYNC.ok);else SCG.setStatus(SCG.token()?'Pendiente de sincronizar…':'Sin clave de GitHub: los datos solo están en este dispositivo.',null);}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-sync]');if(!b)return;
+ if(b.dataset.sync==='save'){const v=(b.parentNode.querySelector('.tokin').value||'').trim();if(!v)return;SCG.ls(SCG.TK,v);SCG.ls(SCG.GK,null);scSyncBox();SCG.sync();}
+ if(b.dataset.sync==='now')SCG.sync();});
+document.addEventListener('DOMContentLoaded',()=>{scSyncBox();setTimeout(()=>SCG.sync(),400);});
 
 </script>
 <script>
@@ -478,7 +518,7 @@ const gv=groups.map(g=>sum(KEPT.filter(r=>r.grade===g),r=>r.valor));
 const gn=groups.map(g=>KEPT.filter(r=>r.grade===g).length);
 // Cartera de 60 tras el plan: las que te quedas + 3 de la watchlist, con el dinero de las ventas ya repartido
 let WLSEL=(()=>{try{const v=JSON.parse(localStorage.getItem('salud-cartera-wl'));if(Array.isArray(v))return v.filter(k=>D.wl.some(w=>w.k===k));}catch(e){}return D.plan.newwl.slice();})();
-const saveWL=()=>{try{localStorage.setItem('salud-cartera-wl',JSON.stringify(WLSEL));}catch(e){}};
+const saveWL=()=>{try{localStorage.setItem('salud-cartera-wl',JSON.stringify(WLSEL));}catch(e){}if(window.scPushSoon)scPushSoon();};
 const pv=r=>r.valor+(r.alloc||0);
 const kbox=document.getElementById('kpis');
 const kpi=(label,big,sub,color)=>el('div',{class:'panel kpi',style:color?`border-top:3px solid ${color}`:null},el('div',{class:'l'},label),el('div',{class:'v'},big),sub?el('div',{class:'l2'},sub):null);
@@ -687,7 +727,6 @@ function show(t,push){if(!TABN[t])t='resumen';
  secs.forEach(s=>{s.hidden=s.dataset.tab!==t;});
  document.getElementById('tabName').textContent=TABN[t];
  menu.querySelectorAll('.mitem').forEach(b=>b.classList.toggle('on',b.dataset.go===t));
- try{localStorage.setItem('salud-cartera-tab',t);}catch(e){}
  if(push!==false){try{history.replaceState(null,'','#'+t);}catch(e){}}
  window.scrollTo({top:0});}
 function openM(o){menu.hidden=!o;mb.setAttribute('aria-expanded',String(o));if(o)menu.querySelector('.mitem.on,.mitem').focus();}
@@ -695,8 +734,8 @@ mb.addEventListener('click',e=>{e.stopPropagation();openM(menu.hidden);});
 menu.addEventListener('click',e=>{const b=e.target.closest('.mitem');if(!b)return;show(b.dataset.go);openM(false);mb.focus();});
 document.addEventListener('click',e=>{if(!menu.hidden&&!menu.contains(e.target))openM(false);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){openM(false);mb.focus();}});
-let st0='resumen';try{st0=(location.hash||'').slice(1)||localStorage.getItem('salud-cartera-tab')||'resumen';}catch(e){}
-show(st0,false);
+// Siempre se abre en Resumen
+show('resumen',false);try{if(location.hash)history.replaceState(null,'',location.pathname+location.search);}catch(e){}
 window.addEventListener('hashchange',()=>show((location.hash||'').slice(1),false));
 // Pantalla completa
 const fsb=document.getElementById('fsBtn');const de=document.documentElement;
@@ -706,7 +745,8 @@ fsb.addEventListener('click',()=>{try{if(fsEl())(document.exitFullscreen||docume
 document.addEventListener('fullscreenchange',fsIco);document.addEventListener('webkitfullscreenchange',fsIco);
 // Pantalla completa solo en el ordenador: en el móvil y en la app instalada no sale
 const scMovil=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-if(!(de.requestFullscreen||de.webkitRequestFullscreen)||scMovil||scStandalone())fsb.hidden=true;
+const fsOk=(document.fullscreenEnabled||document.webkitFullscreenEnabled)&&window.self===window.top;
+if(!fsOk||!(de.requestFullscreen||de.webkitRequestFullscreen)||scMovil||scStandalone())fsb.hidden=true;
 
 // ---- Resumen: gráficos nuevos
 document.getElementById('kFecha').textContent='Datos del '+(D.fecha||'—')+' · '+KEPT.length+' acciones que te quedas';
@@ -737,7 +777,7 @@ document.getElementById('kFecha').textContent='Datos del '+(D.fecha||'—')+' ·
 const info=document.getElementById('dataInfo'),rb=document.getElementById('resetBtn'),msg=document.getElementById('impMsg');
 info.textContent=(IMPORTED?'Datos importados':'Datos originales del informe')+' · fecha '+(D.fecha||'—')+' · '+D.rows.length+' acciones y '+D.wl.length+' en la watchlist.';
 rb.hidden=!IMPORTED;if(!D0){rb.textContent='🗑 Borrar los datos de este dispositivo';info.textContent='Datos importados · fecha '+(D.fecha||'—')+' · '+D.rows.length+' acciones y '+D.wl.length+' en la watchlist. Solo están en este dispositivo.';}
-rb.addEventListener('click',()=>{if(!confirm(D0?'¿Volver a los datos originales del informe? Se borran los importados en este dispositivo.':'¿Borrar los datos de este dispositivo? Podrás volver a importarlos desde tu JSON.'))return;try{localStorage.removeItem(LSD);}catch(e){}location.reload();});
+rb.addEventListener('click',()=>{if(!D0&&SCG.token()){alert('Tus datos están guardados en GitHub y volverían a cargarse. Para cambiarlos, importa otro JSON.');return;}if(!confirm(D0?'¿Volver a los datos originales del informe? Se borran los importados en este dispositivo.':'¿Borrar los datos de este dispositivo? Podrás volver a importarlos desde tu JSON.'))return;try{localStorage.removeItem(LSD);}catch(e){}location.reload();});
 let DL=null;try{if(window.claude&&window.claude.use)window.claude.use('downloads').then(x=>{DL=x;}).catch(()=>{});}catch(e){}
 document.getElementById('expBtn').addEventListener('click',async()=>{const o={app:'salud-cartera',version:1,exportado:new Date().toISOString(),watchlist:WLSEL,datos:D};
  const txt=JSON.stringify(o,null,1);const fn='salud-cartera-'+String(D.fecha||'').split('/').reverse().join('-')+'.json';
@@ -747,7 +787,7 @@ document.getElementById('expBtn').addEventListener('click',async()=>{const o={ap
 document.getElementById('impFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
  rd.onload=()=>{try{const o=JSON.parse(rd.result);const d=o&&o.datos?o.datos:o;
    if(!d||!Array.isArray(d.rows)||!Array.isArray(d.wl)||!d.plan)throw new Error('El archivo no tiene el formato de este informe.');
-   localStorage.setItem(LSD,JSON.stringify(d));if(o&&Array.isArray(o.watchlist))localStorage.setItem('salud-cartera-wl',JSON.stringify(o.watchlist));
+   localStorage.setItem(LSD,JSON.stringify(d));if(o&&Array.isArray(o.watchlist))localStorage.setItem('salud-cartera-wl',JSON.stringify(o.watchlist));localStorage.setItem('salud-cartera:rev',String(Date.now()));
    msg.style.color=C.good;msg.textContent='Importado: '+d.rows.length+' acciones. Recargando…';setTimeout(()=>{location.hash='resumen';location.reload();},700);
   }catch(err){msg.style.color=C.bad;msg.textContent='No se pudo importar: '+(err.message||err);}e.target.value='';};
  rd.readAsText(f);});
