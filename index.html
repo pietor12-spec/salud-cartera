@@ -393,6 +393,27 @@ svg text{font-family:var(--mono)}
  .hero > .kpis{gap:clamp(8px,1.6vh,14px)}
 }
 
+/* KPIs: mismo formato, títulos a la misma altura */
+.hero .kpi{justify-content:flex-start!important;padding-top:16px}
+.hero .kpi .l{min-height:1.3em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.kpirent .l{padding:0 20px}
+.ktog{top:5px!important;right:5px!important;width:20px!important;height:20px!important;font-size:11px!important}
+@media(max-width:820px){
+ .hero > .kpis{grid-auto-rows:1fr}
+ .reshd{margin:0 0 -10px;font-size:20px}
+ .hero #donut{max-width:190px}
+ .hero .hleg{gap:6px}
+ .hero > .panel{padding:12px 14px}
+ .wrap{padding-top:10px}
+}
+/* Ganancias y pérdidas: interruptor de dividendos dentro del total */
+.dtog{background:none;border:0;font:inherit;color:inherit;cursor:pointer;padding:0}
+.dtog b{color:var(--mute)}
+.dtog.on b{color:#00F0FF}
+.sw{display:inline-block;vertical-align:middle;width:24px;height:13px;border-radius:7px;background:var(--line);position:relative;margin-left:4px}
+.sw::after{content:'';position:absolute;top:2px;left:2px;width:9px;height:9px;border-radius:50%;background:var(--mute);transition:left .15s}
+.dtog.on .sw{background:rgba(0,240,255,.35)}.dtog.on .sw::after{left:13px;background:#00F0FF}
+
 </style>
 </head>
 <body>
@@ -643,8 +664,8 @@ function drawKPIs(){kbox.textContent='';
  const rk=el('div',{class:'panel kpi kpirent'}),mr=el('button',{class:'mst',title:'Cambiar con / sin dividendos'});let rsin=false;
  const drawRK=()=>{const g=rsin?KG:KG+KD,col=g>=0?C.good:C.bad,eur=(g>=0?'+':'−')+fmtE(Math.abs(g));rk.textContent='';mr.textContent='';
   rk.append(el('button',{class:'ktog',title:rsin?'Ver con dividendos':'Ver sin dividendos','aria-label':rsin?'Ver con dividendos':'Ver sin dividendos',onclick:()=>{rsin=!rsin;drawRK();}},'⇄'),
-   el('div',{class:'l'},rsin?'Rentabilidad sin dividendos':'Rentabilidad con dividendos'),el('div',{class:'v',style:`color:${col}`},pcs(g/KI)),
-   el('div',{class:'l2 keep',style:`color:${col}`},eur));
+   el('div',{class:'l'},rsin?'Rent. sin div.':'Rent. con div.'),el('div',{class:'v'},pcs(g/KI)),
+   el('div',{class:'l2'},eur));
   mr.append(el('span',{},rsin?'Rent. sin div. ':'Rent. con div. ',el('i',{class:'tg'},'⇄')),el('b',{style:`color:${col}`},pcs(g/KI)),el('small',{style:`color:${col}`},eur));};
  mr.onclick=()=>{rsin=!rsin;drawRK();};drawRK();
  const DYOC=((sum(DV,r=>r.dg||0)/sum(DV,r=>r.inv))*100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' %';
@@ -881,12 +902,11 @@ if(!fsOk||!(de.requestFullscreen||de.webkitRequestFullscreen)||scMovil||scStanda
   const g=mode==='grw'?'Growth':'Dividendera';return KEPT.filter(r=>r.grp===g&&r.inv>0).map(r=>mk(r.name,r.sector,[r],r));}
  function draw(){bar.textContent='';
   [['sec','Por sector'],['grw','Acc. Growth'],['div','Acc. Dividenderas']].forEach(([k,t])=>bar.append(el('button',{class:'chip'+(mode===k?' on':''),onclick:()=>{mode=k;draw();}},t)));
-  bar.append(el('button',{class:'chip divtog'+(withDiv?' on':''),onclick:()=>{withDiv=!withDiv;draw();}},withDiv?'✓ Con dividendos':'Sin dividendos'));
   const L=data().sort((a,b)=>b.t-a.t);const tg=sum(L,x=>x.g),td=sum(L,x=>x.d),ti=sum(L,x=>x.i),npos=L.filter(x=>x.t>=0).length;const tt=tg+td;
   tot.textContent='';tot.append(...[
    el('div',{class:'pstat'},el('span',{},'G/P'),el('b',{class:'num',style:`color:${tt>=0?C.good:C.bad}`},eu(tt))),
    el('div',{class:'pstat'},el('span',{},'Rent.'),el('b',{class:'num',style:`color:${tt>=0?C.good:C.bad}`},pc(tt/ti))),
-   withDiv?el('div',{class:'pstat'},el('span',{},'Dividendos'),el('b',{class:'num',style:'color:#00F0FF'},'+'+fmtE(td))):null,
+   el('button',{class:'pstat dtog'+(withDiv?' on':''),title:withDiv?'Quitar dividendos':'Sumar dividendos','aria-pressed':String(withDiv),onclick:()=>{withDiv=!withDiv;draw();}},el('span',{},'Dividendos ',el('i',{class:'sw'})),el('b',{class:'num'},withDiv?'+'+fmtE(td):'no')),
    el('small',{class:'pcount'},`${npos} en positivo · ${L.length-npos} en negativo`+(withDiv?' · columna rayada = dividendos cobrados':''))].filter(Boolean));
   const top=x=>Math.max(0,x.p)+x.pd,bot=x=>Math.max(0,-x.p);
   if(window.SC_HBAR&&SC_HBAR()){drawH(L,top,bot);return;}
