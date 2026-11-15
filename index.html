@@ -347,21 +347,13 @@ svg text{font-family:var(--mono)}
 .gglobal{margin-top:16px;padding-top:16px}
 /* Ganancias y pérdidas: título separado de los botones */
 .pnlov .panel > h3{margin-bottom:16px}
-/* Web: todo en una pantalla, KPIs a los lados del rosco */
+/* Web: bloque centrado, rosco a la izquierda y KPIs a la derecha */
 @media(min-width:821px){
- .hero{grid-template-columns:minmax(0,1fr) minmax(0,2.2fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto auto minmax(0,1fr);gap:12px 14px;align-items:stretch;min-height:calc(100vh - 196px)}
- .reshd{grid-row:1}
- .hero > .kpis{display:contents}
- .hero > .panel{grid-column:2;grid-row:3/6;display:flex;flex-direction:column;justify-content:center}
- .hero .kpi{padding:12px}
- .hero .kpi:nth-child(1){grid-column:1;grid-row:3}.hero .kpi:nth-child(2){grid-column:1;grid-row:4}.hero .kpi:nth-child(5){grid-column:1;grid-row:5}
- .hero .kpi:nth-child(3){grid-column:3;grid-row:3}.hero .kpi:nth-child(4){grid-column:3;grid-row:4}.hero .kpi:nth-child(6){grid-column:3;grid-row:5}
- .hero .kpi .l2:not(.keep){display:none}
- .hero #donut{max-width:220px}
- .hero .healthbox{grid-template-columns:minmax(170px,220px) minmax(0,1fr)}
+ .hero{grid-template-rows:auto minmax(0,1fr) auto minmax(0,1fr);min-height:calc(100vh - 196px)}
+ .reshd{grid-row:1}.hero > .panel,.hero > .kpis{grid-row:3}
+ .kside{display:none}.dring{display:contents}
 }
-/* Móvil: el gráfico abierto se ve girado, en horizontal */
-.pnlov.land{inset:auto;top:0;left:100vw;width:100vh;width:100dvh;height:100vw;transform-origin:top left;transform:rotate(90deg)}
+/* Móvil: gráfico abierto compacto */
 .pnlov.cmp{padding:6px}
 .pnlov.cmp .panel{padding:10px 12px}
 .pnlov.cmp .panel > h3{font-size:15px;margin-bottom:8px}
@@ -373,6 +365,32 @@ svg text{font-family:var(--mono)}
 .pnlov.cmp .pnltabs{padding-right:46px}
 .pnlov.cmp .closebtn{top:6px;right:6px;width:34px;height:34px}
 .pnlov.cmp .chip{min-height:28px;padding:3px 10px;font-size:12px}
+
+/* Móvil: barras horizontales */
+.xchart{position:relative;display:flex;flex-direction:column;gap:var(--gap)}
+.xrow{display:flex;align-items:center;height:var(--rh);gap:6px;cursor:pointer}
+.xlab{flex:none;width:var(--lw);display:flex;align-items:center;gap:6px;font-size:11.5px;line-height:1.1;overflow:hidden}
+.xlab span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xtrack{position:relative;flex:1;height:100%;margin-right:52px}
+.xbar{position:absolute;top:12%;bottom:12%;border-radius:3px}
+.xbar.cdiv{border-radius:0 3px 3px 0}
+.xval{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--mono);white-space:nowrap;line-height:1}
+.xzero{position:absolute;top:0;bottom:0;width:1px;background:var(--mute);opacity:.6}
+/* Móvil: cifras alrededor del rosco */
+@media(max-width:820px){
+ .hero > .kpis{display:none}
+ .dring{display:grid;grid-template-columns:minmax(0,1fr) 140px minmax(0,1fr);align-items:center;gap:6px}
+ .dring #donut{max-width:140px}
+ .kside{display:flex;flex-direction:column;gap:14px}
+ .kside.r{text-align:right;align-items:flex-end}
+ .mst{display:flex;flex-direction:column;gap:1px;line-height:1.15;background:none;border:0;padding:0;color:var(--ink);font:inherit;text-align:inherit}
+ .kside.r .mst{align-items:flex-end}
+ .mst span{font-size:11px;color:var(--mute)}
+ .mst b{font-family:var(--mono);font-size:15px}
+ .mst small{font-family:var(--mono);font-size:11px}
+ button.mst{cursor:pointer}
+ .mst .tg{color:var(--accent);font-size:11px}
+}
 
 </style>
 </head>
@@ -621,16 +639,24 @@ function drawKPIs(){kbox.textContent='';
  pScore=(()=>{const s=P.filter(r=>r.score!=null&&pv(r)>0);return sum(s,r=>r.score*pv(r))/sum(s,pv);})();
  const DV=KEPT.filter(r=>r.grp==='Dividendera');const PI=sum(P,r=>(r.inv||0)+(r.alloc||0))+D.plan.rest;
  const KI=sum(KEPT,r=>r.inv),KG=sum(KEPT,r=>r.valor-r.inv),KD=sum(KEPT,r=>r.dg||0),KR=(KG+KD)/KI;const pcs=v=>(v>=0?'+':'−')+Math.abs(v*100).toLocaleString('es-ES',{minimumFractionDigits:1,maximumFractionDigits:1})+' %';
- const rk=el('div',{class:'panel kpi kpirent'});let rsin=false;
- const drawRK=()=>{const g=rsin?KG:KG+KD,col=g>=0?C.good:C.bad;rk.textContent='';
+ const rk=el('div',{class:'panel kpi kpirent'}),mr=el('button',{class:'mst',title:'Cambiar con / sin dividendos'});let rsin=false;
+ const drawRK=()=>{const g=rsin?KG:KG+KD,col=g>=0?C.good:C.bad,eur=(g>=0?'+':'−')+fmtE(Math.abs(g));rk.textContent='';mr.textContent='';
   rk.append(el('button',{class:'ktog',title:rsin?'Ver con dividendos':'Ver sin dividendos','aria-label':rsin?'Ver con dividendos':'Ver sin dividendos',onclick:()=>{rsin=!rsin;drawRK();}},'⇄'),
-   el('div',{class:'l'},rsin?'Rent. sin div.':'Rent. con div.'),el('div',{class:'v',style:`color:${col}`},pcs(g/KI)),
-   el('div',{class:'l2 keep',style:`color:${col}`},(g>=0?'+':'−')+fmtE(Math.abs(g))));};drawRK();
- kbox.append(kpi('Valor',fmtE(PT),`Invertido: ${fmtE(PI)}`),rk,
+   el('div',{class:'l'},rsin?'Rentabilidad sin dividendos':'Rentabilidad con dividendos'),el('div',{class:'v',style:`color:${col}`},pcs(g/KI)),
+   el('div',{class:'l2 keep',style:`color:${col}`},eur));
+  mr.append(el('span',{},rsin?'Rent. sin div. ':'Rent. con div. ',el('i',{class:'tg'},'⇄')),el('b',{style:`color:${col}`},pcs(g/KI)),el('small',{style:`color:${col}`},eur));};
+ mr.onclick=()=>{rsin=!rsin;drawRK();};drawRK();
+ const DYOC=((sum(DV,r=>r.dg||0)/sum(DV,r=>r.inv))*100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' %';
+ kbox.append(kpi('Valor cotización actual',fmtE(PT),`Invertido: ${fmtE(PI)}`),rk,
   kpi('Growth',fmtE(sum(pG,pv)),`${Math.round(sum(pG,pv)/PT*100)} % de la cartera`),
   kpi('Dividenderas',fmtE(sum(pD,pv)),`${Math.round(sum(pD,pv)/PT*100)} % de la cartera`),
-  kpi('DYOC',((sum(DV,r=>r.dg||0)/sum(DV,r=>r.inv))*100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' %'),
+  kpi('DYOC',DYOC),
   kpi('Acciones',String(P.length)));
+ // Móvil: las cifras van alrededor del rosco
+ {const ms=(l,v)=>el('div',{class:'mst'},el('span',{},l),el('b',{},v));const dn=document.getElementById('donut');
+  const ring=el('div',{class:'dring'});dn.replaceWith(ring);
+  ring.append(el('div',{class:'kside l'},ms('Valor',fmtE(PT)),mr,ms('DYOC',DYOC)),dn,
+   el('div',{class:'kside r'},ms('Growth',fmtE(sum(pG,pv))),ms('Dividenderas',fmtE(sum(pD,pv))),ms('Acciones',String(P.length))));}
  const gs=document.getElementById('gScore');if(gs){gs.textContent=Math.round(pScore)+'/100';gs.style.color=pScore>=75?C.good:pScore>=55?C.warn:C.bad;}}
 
 
@@ -862,9 +888,11 @@ if(!fsOk||!(de.requestFullscreen||de.webkitRequestFullscreen)||scMovil||scStanda
    withDiv?el('div',{class:'pstat'},el('span',{},'Dividendos'),el('b',{class:'num',style:'color:#00F0FF'},'+'+fmtE(td))):null,
    el('small',{class:'pcount'},`${npos} en positivo · ${L.length-npos} en negativo`+(withDiv?' · columna rayada = dividendos cobrados':''))].filter(Boolean));
   const top=x=>Math.max(0,x.p)+x.pd,bot=x=>Math.max(0,-x.p);
+  if(window.SC_HBAR&&SC_HBAR()){drawH(L,top,bot);return;}
+  chart.className='cchart';
   const tops=L.map(top).sort((a,b)=>b-a),pmaxR=tops[0]||0,pmax=(tops.length>1&&pmaxR>tops[1]*1.35)?tops[1]*1.35:pmaxR,nmax=Math.max(0,...L.map(bot)),span=(pmax+nmax)||1;
   const W=chart.clientWidth||900,cw=W/L.length,narrow=cw<46,tiny=cw<13;
-  const PH=window.SC_FIT?Math.max(130,Math.min(460,(window.SC_FIT()-(window.SC_TOP?SC_TOP(chart):chart.getBoundingClientRect().top))-(narrow?72:32)-(narrow&&mode==='sec'?88:46)-(nmax&&!tiny?(narrow?46:36):6))):300,zt=pmax/span*PH,xb=(nmax&&!tiny)?(narrow?46:36):6;
+  const PH=window.SC_FIT?Math.max(130,Math.min(460,(window.SC_FIT()-chart.getBoundingClientRect().top)-(narrow?72:32)-(narrow&&mode==='sec'?88:46)-(nmax&&!tiny?(narrow?46:36):6))):300,zt=pmax/span*PH,xb=(nmax&&!tiny)?(narrow?46:36):6;
   chart.textContent='';chart.classList.toggle('narrow',narrow&&mode==='sec');chart.classList.toggle('narrowv',narrow);chart.style.paddingTop=tiny?'10px':'';
   const area=el('div',{class:'carea',style:`height:${PH+xb}px`});area.append(el('i',{class:'czero',style:`top:${zt}px`}));chart.append(area);
   const labs=el('div',{class:'clabs'});chart.append(labs);
@@ -878,16 +906,32 @@ if(!fsOk||!(de.requestFullscreen||de.webkitRequestFullscreen)||scMovil||scStanda
    const v=tiny?null:el('div',{class:'cval'+(narrow?' vert':''),style:pos||hd?`bottom:${PH+xb-upTop+4}px`:`top:${zt+hp+4}px`},el('b',{style:`color:${col}`},pc(x.t)));
    if(v)c.append(v);area.append(c);
    labs.append(el('div',{class:'clab',style:`width:${100/L.length}%`},x.r&&!tiny?lg(x.r,narrow?Math.min(18,Math.max(10,cw-4)):20):null,narrow&&x.r?null:el('span',{},x.lab)));});}
+ // Móvil: barras horizontales, una fila por acción o sector, todas a la vista
+ function drawH(L,top,bot){chart.textContent='';chart.className='xchart';chart.style.paddingTop='';
+  const tops=L.map(top).sort((a,b)=>b-a),pmaxR=tops[0]||0,pmax=(tops.length>1&&pmaxR>tops[1]*1.35)?tops[1]*1.35:pmaxR,nmax=Math.max(0,...L.map(bot)),span=(pmax+nmax)||1;
+  const avail=(window.SC_FIT?SC_FIT():innerHeight)-chart.getBoundingClientRect().top-6;
+  const n=L.length,gap=n>30?1:3,rh=Math.max(12,Math.min(34,Math.floor(avail/n)-gap));
+  const big=rh>=24||mode==='sec',lw=big?(mode==='sec'?96:104):Math.min(20,rh+2),z=nmax/span*100;
+  chart.style.setProperty('--rh',rh+'px');chart.style.setProperty('--gap',gap+'px');chart.style.setProperty('--lw',lw+'px');
+  const zl=el('i',{class:'xzero',style:`left:calc(var(--lw) + 6px + (100% - var(--lw) - 6px - 52px) * ${z/100})`});chart.append(zl);
+  L.forEach(x=>{const pos=x.t>=0,col=pos?C.good:C.bad,pcol=x.p>=0?C.good:C.bad;
+   let hp=Math.abs(x.p)/span*100,hd=x.pd/span*100;if(x.p>=0&&top(x)>pmax){const k=pmax/top(x);hp*=k;hd*=k;}
+   const row=el('div',{class:'xrow',title:`${x.lab}: ${pc(x.t)} · ${eu(x.g+x.d)}`,onclick:x.r?()=>openD(x.r):null});
+   const lab=el('div',{class:'xlab'},x.r?lg(x.r,Math.min(20,rh-2)):null,big?el('span',{},x.lab):null);
+   const tr=el('div',{class:'xtrack'});
+   const l0=x.p>=0?z:z-hp;
+   if(hp)tr.append(el('i',{class:'xbar',style:`left:${l0}%;width:${Math.max(hp,.4)}%;background:${pcol}`}));
+   if(hd)tr.append(el('i',{class:'xbar cdiv',style:`left:${x.p>=0?z+hp:z}%;width:${hd}%`}));
+   const endp=x.p>=0?z+hp+hd:z+hd;
+   tr.append(el('b',{class:'xval',style:`left:calc(${endp}% + 4px);color:${col};font-size:${Math.min(12.5,rh-2)}px`},pc(x.t)));
+   row.append(lab,tr);chart.append(row);});}
  window.scPnlDraw=draw;draw();let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(draw,150);});})();
 // Ganancias y pérdidas: se abre a pantalla completa desde la tarjeta de salud
 (function(){const opt='B';
  const pnl=document.getElementById('secPnl').closest('section');
   if(opt==='B'){pnl.hidden=true;pnl.dataset.tab='x';const hb=document.querySelector('.hero .panel');hb.style.position='relative';
   const ov=el('div',{class:'pnlov',hidden:''});document.body.append(ov);
-  // En el móvil en vertical, el gráfico se abre girado (en horizontal)
-  const land=()=>scMovil&&innerHeight>innerWidth;
-  const fit=()=>{const l=land();ov.classList.toggle('land',l);ov.classList.toggle('cmp',scMovil);window.SC_FIT=l?()=>innerWidth-14:scMovil?()=>innerHeight-14:()=>innerHeight-30;
-   window.SC_TOP=l?(c=>{let y=0,e=c;while(e&&e!==ov){y+=e.offsetTop;e=e.offsetParent;}return y;}):null;};
+  const fit=()=>{ov.classList.toggle('cmp',scMovil);window.SC_FIT=scMovil?()=>innerHeight-14:()=>innerHeight-30;window.SC_HBAR=()=>scMovil&&innerHeight>innerWidth;};
   hb.append(el('button',{class:'ibtn expbtn',title:'Ver ganancias y pérdidas a pantalla completa',onclick:()=>{ov.hidden=false;ov.append(pnl);pnl.hidden=false;fit();scPnlDraw();}},'⤢'));
   window.addEventListener('resize',()=>{if(!ov.hidden)fit();});
   ov.addEventListener('click',e=>{if(e.target===ov){ov.hidden=true;}});
