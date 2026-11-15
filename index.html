@@ -421,9 +421,23 @@ svg text{font-family:var(--mono)}
 }
 @media(max-width:820px){ .hero #dlegend{width:74%} }
 
+#splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 46%,#13203a 0%,#0b1220 38%,#080c12 75%);transition:opacity .5s ease,visibility .5s}
+#splash.out{opacity:0;visibility:hidden}
+#splash h1{margin:0 0 30px;text-align:center;font-family:var(--display);font-weight:800;font-size:clamp(34px,10vw,52px);line-height:1.05;letter-spacing:-1px;color:#e8f4fc;opacity:0;animation:spIn .7s .1s ease forwards}
+#splash h1 span{display:block;color:#00FFA3}
+#splash .sp-ico{position:relative;opacity:0;animation:spIn .7s .3s ease forwards}
+#splash .sp-ico::before{content:'';position:absolute;inset:-38%;border-radius:50%;background:radial-gradient(circle,rgba(0,255,163,.20) 0%,rgba(0,255,163,0) 62%);z-index:-1}
+#splash svg{display:block;width:clamp(120px,34vw,160px);height:auto;border-radius:24%;box-shadow:0 22px 50px rgba(0,0,0,.55),0 0 0 1px rgba(0,255,163,.14)}
+#splash .sp-bar{position:relative;width:clamp(120px,32vw,150px);height:4px;margin-top:34px;border-radius:4px;background:#1d2d42;overflow:hidden;opacity:0;animation:spIn .7s .5s ease forwards}
+#splash .sp-bar i{position:absolute;top:0;bottom:0;width:42%;border-radius:4px;background:linear-gradient(90deg,#00FFA3,#00F0FF);animation:spBar 1.3s ease-in-out infinite}
+@keyframes spIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes spBar{0%{left:-42%}100%{left:100%}}
+@media (prefers-reduced-motion:reduce){#splash *{animation-duration:.01s!important}}
 </style>
 </head>
 <body>
+<div id="splash" role="status" aria-label="Cargando"><h1>Salud de mi <span>cartera</span></h1><div class="sp-ico"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0A1120"/><path d="M256 420s-160-94-160-218a90 90 0 0 1 160-56 90 90 0 0 1 160 56c0 124-160 218-160 218z" fill="#00FFA3"/><path d="M120 258h78l30-58 44 120 36-90 22 28h62" fill="none" stroke="#0A1120" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="sp-bar"><i></i></div></div>
+<script>(function(){var t0=Date.now();function go(){var s=document.getElementById("splash");if(!s)return;setTimeout(function(){s.classList.add("out");setTimeout(function(){s.remove();},500);},Math.max(0,2400-(Date.now()-t0)));}if(document.readyState==="complete")go();else addEventListener("load",go);})();</script>
 <div class="wrap" id="wrap">
 
 <div class="topbar">
