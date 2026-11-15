@@ -281,21 +281,31 @@ svg text{font-family:var(--mono)}
 .hero > .kpis{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr;align-content:stretch}
 .hero > .kpis .kpi{display:flex;flex-direction:column;justify-content:center}
 @media(max-width:820px){.hero > .kpis{grid-auto-rows:auto}}
-/* Ganancia por sector */
-.pnltot{display:flex;justify-content:space-between;align-items:center;padding:0 0 10px;margin-bottom:6px;border-bottom:1px solid var(--line)}
-.pnltot b{font-size:18px}
-.pnlrow{display:grid;grid-template-columns:190px minmax(0,1fr) 120px;gap:10px;align-items:center;padding:5px 0}
-.pnln{display:flex;flex-direction:column;font-size:14px;line-height:1.2}.pnln small,.pnlv small{color:var(--mute);font-size:11px}
-.pnlbar{position:relative;height:16px;background:var(--panel2);border-radius:5px}
-.pnlbar i{position:absolute;top:0;bottom:0;border-radius:4px}
-.pnlbar i.mid{left:50%;width:1px;background:var(--mute);opacity:.6;border-radius:0}
-.pnlv{display:flex;flex-direction:column;text-align:right;font-size:13px;line-height:1.2}
-@media(max-width:600px){.pnlrow{grid-template-columns:105px minmax(0,1fr) 90px;gap:8px}.pnln{font-size:12px}}
-.pnltabs{display:flex;gap:8px;margin-bottom:12px}
-.pnltot small{color:var(--mute);font-size:12px;margin-left:6px}
-button.pnln{background:none;border:0;color:var(--ink);font:inherit;text-align:left;cursor:pointer;padding:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
-.pnltot{flex-wrap:wrap;gap:4px}
-button.pnln:hover{color:var(--accent)}
+/* Ganancias y pérdidas: columnas */
+.pnltabs{display:flex;gap:8px;margin-bottom:10px}
+.pnltot{display:flex;justify-content:center;align-items:flex-end;gap:6px 34px;flex-wrap:wrap;padding:4px 0 12px;margin-bottom:14px;border-bottom:1px solid var(--line);text-align:center}
+.pstat{display:flex;flex-direction:column;align-items:center;gap:2px}
+.pstat span{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em}
+.pstat b{font-size:24px}
+.pcount{flex-basis:100%;color:var(--mute);font-size:12px}
+.cchart{position:relative;padding-top:44px;padding-bottom:4px}
+.cchart.narrow{padding-top:58px}
+.carea{position:relative;margin-bottom:42px}
+.czero{position:absolute;left:0;right:0;height:1px;background:var(--mute);opacity:.6}
+.ccol{position:absolute;top:0;bottom:0;cursor:default}
+.ccol[title]:hover .cbar{filter:brightness(1.2)}
+.cbar{position:absolute;left:18%;right:18%;border-radius:4px}
+.narrow .cbar{left:12%;right:12%;border-radius:2px}
+.cval{position:absolute;left:-10px;right:-10px;display:flex;flex-direction:column;align-items:center;line-height:1.15;white-space:nowrap}
+.cval b{font-family:var(--mono);font-size:15px}
+.cval small{color:var(--mute);font-size:11px;font-family:var(--mono)}
+.cval.vert b{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10.5px}
+.clabs{display:flex;position:absolute;left:0;right:0;bottom:0;height:40px}
+.clab{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;line-height:1.15;color:var(--ink);text-align:center;overflow:hidden;padding:0 2px}
+.clab span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ccol{cursor:pointer}
+@media(max-width:600px){.pstat b{font-size:20px}.clab{font-size:9.5px}.cval b{font-size:12px}.cval small{display:none}}
+.cchart.tiny-note{}
 
 </style>
 </head>
@@ -541,13 +551,13 @@ function drawKPIs(){kbox.textContent='';
  const NEWW=D.wl.filter(w=>WLSEL.includes(w.k));const P=[...KEPT,...NEWW];const PT=sum(P,pv)+D.plan.rest;
  const pG=P.filter(r=>r.grp==='Growth'),pD=P.filter(r=>r.grp==='Dividendera'||r.grp==='Watchlist');
  pScore=(()=>{const s=P.filter(r=>r.score!=null&&pv(r)>0);return sum(s,r=>r.score*pv(r))/sum(s,pv);})();
- const DV=KEPT.filter(r=>r.grp==='Dividendera');
- kbox.append(kpi('DYOC',((sum(DV,r=>r.dg||0)/sum(DV,r=>r.inv))*100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' %'),
-  kpi('Acciones',String(P.length)),
+ const DV=KEPT.filter(r=>r.grp==='Dividendera');const PI=sum(P,r=>(r.inv||0)+(r.alloc||0))+D.plan.rest;
+ kbox.append(kpi('Valor cotización actual',fmtE(PT),`Invertido: ${fmtE(PI)}`),
+  kpi('DYOC',((sum(DV,r=>r.dg||0)/sum(DV,r=>r.inv))*100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' %'),
   kpi('Growth',fmtE(sum(pG,pv)),`${Math.round(sum(pG,pv)/PT*100)} % de la cartera`,GC.Growth),
   kpi('Dividenderas',fmtE(sum(pD,pv)),`${Math.round(sum(pD,pv)/PT*100)} % de la cartera`,GC.Dividendera),
   kpi('Nota media ponderada',Math.round(pScore)+'/100'),
-  kpi('Valor cotización actual',fmtE(PT)));}
+  kpi('Acciones',String(P.length)));}
 
 
 (function donut(){const s=document.getElementById('donut');let a=-Math.PI/2;const cx=95,cy=95,ro=88,ri=58;
@@ -763,23 +773,30 @@ if(!fsOk||!(de.requestFullscreen||de.webkitRequestFullscreen)||scMovil||scStanda
 
 // ---- Resumen: gráficos nuevos
 (function secPnl(){const box=document.getElementById('secPnl');let mode='sec';
- const tabs=el('div',{class:'pnltabs'});const list=el('div');box.append(tabs,list);
- const pc=v=>(v>=0?'+':'')+(v*100).toLocaleString('es-ES',{maximumFractionDigits:1})+' %';const eu=v=>(v>=0?'+':'−')+fmtE(Math.abs(v));
+ const tabs=el('div',{class:'pnltabs'});const tot=el('div',{class:'pnltot'});const chart=el('div',{class:'cchart'});box.append(tabs,tot,chart);
+ const pc=v=>(v>=0?'+':'−')+(Math.abs(v)*100).toLocaleString('es-ES',{maximumFractionDigits:1})+' %';const eu=v=>(v>=0?'+':'−')+fmtE(Math.abs(v));
+ function data(){if(mode==='sec'){const by={};KEPT.forEach(r=>{const o=by[r.sector]=by[r.sector]||{v:0,i:0,n:0};o.v+=r.valor;o.i+=r.inv;o.n++;});
+   return Object.entries(by).map(([k,o])=>({lab:k,sub:o.n+' acc.',g:o.v-o.i,p:o.i?(o.v-o.i)/o.i:0}));}
+  return KEPT.filter(r=>r.inv>0).map(r=>({r,lab:r.name,sub:r.sector,g:r.valor-r.inv,p:(r.valor-r.inv)/r.inv}));}
  function draw(){tabs.textContent='';[['sec','Por sector'],['acc','Por acción']].forEach(([k,t])=>tabs.append(el('button',{class:'chip'+(mode===k?' on':''),onclick:()=>{mode=k;draw();}},t)));
-  list.textContent='';let L;
-  if(mode==='sec'){const by={};KEPT.forEach(r=>{const o=by[r.sector]=by[r.sector]||{v:0,i:0,n:0};o.v+=r.valor;o.i+=r.inv;o.n++;});
-   L=Object.entries(by).map(([k,o])=>({lab:k,sub:o.n+' acc.',g:o.v-o.i,p:o.i?(o.v-o.i)/o.i:0}));}
-  else L=KEPT.filter(r=>r.inv>0).map(r=>({r,lab:r.name,sub:r.sector,g:r.valor-r.inv,p:(r.valor-r.inv)/r.inv}));
-  L.sort((a,b)=>b.g-a.g);
-  const tg=sum(L,x=>x.g),ti=sum(KEPT,r=>r.inv),npos=L.filter(x=>x.g>=0).length;
-  const pmax=Math.max(0,...L.map(x=>x.g)),nmax=Math.max(0,...L.map(x=>-x.g)),span=(pmax+nmax)||1,z=nmax/span*100;
-  list.append(el('div',{class:'pnltot'},el('span',{},'Total ',el('small',{},`${npos} en positivo · ${L.length-npos} en negativo`)),el('b',{class:'num',style:`color:${tg>=0?C.good:C.bad}`},eu(tg)+' · '+pc(tg/ti))));
-  L.forEach(x=>{const pos=x.g>=0,col=pos?C.good:C.bad,w=Math.abs(x.g)/span*100;
-   const name=x.r?el('button',{class:'pnln pname',onclick:()=>openD(x.r)},el('span',{style:'display:flex;gap:6px;align-items:center'},lg(x.r,18),x.lab),el('small',{},x.sub)):el('span',{class:'pnln'},x.lab,el('small',{},x.sub));
-   list.append(el('div',{class:'pnlrow',title:`${x.lab}: ${eu(x.g)}`},name,
-    el('div',{class:'pnlbar'},nmax?el('i',{class:'mid',style:`left:${z}%`}):null,el('i',{style:`left:${pos?z:z-w}%;width:${Math.max(w,.6)}%;background:${col}`})),
-    el('span',{class:'num pnlv',style:`color:${col}`},eu(x.g),el('small',{},pc(x.p)))));});}
- draw();})();
+  const L=data().sort((a,b)=>b.p-a.p);const tg=sum(L,x=>x.g),ti=sum(KEPT,r=>r.inv),npos=L.filter(x=>x.g>=0).length;
+  tot.textContent='';tot.append(
+   el('div',{class:'pstat'},el('span',{},'G/P'),el('b',{class:'num',style:`color:${tg>=0?C.good:C.bad}`},eu(tg))),
+   el('div',{class:'pstat'},el('span',{},'Rent.'),el('b',{class:'num',style:`color:${tg>=0?C.good:C.bad}`},pc(tg/ti))),
+   el('small',{class:'pcount'},`${npos} en positivo · ${L.length-npos} en negativo`));
+  // columnas: altura según la rentabilidad (%)
+  const pmax=Math.max(0,...L.map(x=>x.p)),nmax=Math.max(0,...L.map(x=>-x.p)),span=(pmax+nmax)||1;
+  const W=chart.clientWidth||900,cw=W/L.length,narrow=cw<46,PH=narrow?200:180;
+  const zt=pmax/span*PH,tiny=cw<13,xb=(nmax&&!tiny)?(narrow?46:36):6;chart.textContent='';chart.classList.toggle('narrow',narrow);chart.style.paddingTop=tiny?'10px':'';
+  const area=el('div',{class:'carea',style:`height:${PH+xb}px`});area.append(el('i',{class:'czero',style:`top:${zt}px`}));chart.append(area);
+  const labs=el('div',{class:'clabs'});chart.append(labs);
+  L.forEach((x,i)=>{const pos=x.g>=0,col=pos?C.good:C.bad,h=Math.max(Math.abs(x.p)/span*PH,2);
+   const c=el('div',{class:'ccol',title:`${x.lab}: ${pc(x.p)} · ${eu(x.g)}`,style:`left:${i/L.length*100}%;width:${100/L.length}%`,onclick:x.r?()=>openD(x.r):null});
+   c.append(el('i',{class:'cbar',style:`top:${pos?zt-h:zt}px;height:${h}px;background:${col}`}));
+   const v=tiny?null:el('div',{class:'cval'+(narrow?' vert':''),style:pos?`bottom:${PH+xb-zt+h+4}px`:`top:${zt+h+4}px`},el('b',{style:`color:${col}`},pc(x.p)),narrow?null:el('small',{},eu(x.g)));
+   if(v)c.append(v);area.append(c);
+   labs.append(el('div',{class:'clab',style:`width:${100/L.length}%`},x.r&&!tiny?lg(x.r,narrow?Math.min(18,Math.max(10,cw-4)):20):null,narrow&&x.r?null:el('span',{},x.lab)));});}
+ draw();let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(draw,150);});})();
 
 // ---- Datos: exportar e importar JSON
 const info=document.getElementById('dataInfo'),rb=document.getElementById('resetBtn'),msg=document.getElementById('impMsg');
