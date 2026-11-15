@@ -289,13 +289,13 @@ svg text{font-family:var(--mono)}
 .pstat b{font-size:24px}
 .pcount{flex-basis:100%;color:var(--mute);font-size:12px}
 .cchart{position:relative;padding-top:44px;padding-bottom:4px}
-.cchart.narrow{padding-top:58px}
+.cchart.narrowv{padding-top:58px}
 .carea{position:relative;margin-bottom:42px}
 .czero{position:absolute;left:0;right:0;height:1px;background:var(--mute);opacity:.6}
 .ccol{position:absolute;top:0;bottom:0;cursor:default}
 .ccol[title]:hover .cbar{filter:brightness(1.2)}
 .cbar{position:absolute;left:18%;right:18%;border-radius:4px}
-.narrow .cbar{left:12%;right:12%;border-radius:2px}
+.narrowv .cbar{left:12%;right:12%;border-radius:2px}
 .cval{position:absolute;left:-10px;right:-10px;display:flex;flex-direction:column;align-items:center;line-height:1.15;white-space:nowrap}
 .cval b{font-family:var(--mono);font-size:15px}
 .cval small{color:var(--mute);font-size:11px;font-family:var(--mono)}
@@ -306,6 +306,42 @@ svg text{font-family:var(--mono)}
 .ccol{cursor:pointer}
 @media(max-width:600px){.pstat b{font-size:20px}.clab{font-size:9.5px}.cval b{font-size:12px}.cval small{display:none}}
 .cchart.tiny-note{}
+
+.cdiv{background:repeating-linear-gradient(135deg,#00F0FF 0 4px,rgba(0,240,255,.22) 4px 8px)!important;border:1px solid #00F0FF;border-radius:4px 4px 0 0}
+.divtog{margin-left:auto}
+.chip{min-height:30px;padding:4px 12px;font-size:13px}
+/* Opción B: panel a pantalla completa */
+.expbtn{position:absolute;top:12px;right:12px;width:38px;height:38px;font-size:18px;color:var(--accent)}
+.pnlov{position:fixed;inset:0;z-index:60;background:rgba(5,9,18,.85);padding:24px;overflow:auto}
+.pnlov[hidden]{display:none}
+.pnlov section{max-width:1400px;margin:0 auto}
+.pnlov .panel{position:relative}
+.closebtn{position:absolute;top:12px;right:12px;width:38px;height:38px}
+
+.pnlov{padding:14px}
+.pnlov .panel > p{display:none}
+
+.cbreak{position:absolute;left:12%;right:12%;height:8px;border-top:2px solid #101B30;border-bottom:2px solid #101B30;background:transparent}
+.closebtn{top:10px;right:10px}
+.pnlov .pnltabs{padding-right:52px}
+/* Resumen: las tarjetas llegan hasta abajo de la pantalla */
+@media(min-width:821px){
+ .hero{min-height:calc(100vh - 150px)}
+ .hero > .panel{display:flex;flex-direction:column}
+ .hero > .panel .healthbox{flex:1}
+ #donut{max-width:min(360px,46vh)}
+ .healthbox{grid-template-columns:minmax(220px,min(360px,46vh)) minmax(0,1fr)}
+ .hero > .kpis .kpi .v{font-size:32px}
+}
+.gscore b{color:inherit}
+.gglobal{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.ghr.gglobal{grid-template-columns:96px minmax(0,1fr) 72px}
+.pnltabs{flex-wrap:wrap}
+.divtog{margin-left:auto}
+@media(max-width:600px){.divtog{margin-left:0}.pnlov{padding:8px}}
+.cchart.narrow .clabs{height:84px}
+.cchart.narrow .carea{margin-bottom:86px}
+.cchart.narrow .clab span{writing-mode:vertical-rl;transform:rotate(180deg);max-height:80px;font-size:10px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 </style>
 </head>
@@ -552,12 +588,14 @@ function drawKPIs(){kbox.textContent='';
  const pG=P.filter(r=>r.grp==='Growth'),pD=P.filter(r=>r.grp==='Dividendera'||r.grp==='Watchlist');
  pScore=(()=>{const s=P.filter(r=>r.score!=null&&pv(r)>0);return sum(s,r=>r.score*pv(r))/sum(s,pv);})();
  const DV=KEPT.filter(r=>r.grp==='Dividendera');const PI=sum(P,r=>(r.inv||0)+(r.alloc||0))+D.plan.rest;
+ const KI=sum(KEPT,r=>r.inv),KG=sum(KEPT,r=>r.valor-r.inv),KD=sum(KEPT,r=>r.dg||0),KR=(KG+KD)/KI;const pcs=v=>(v>=0?'+':'−')+Math.abs(v*100).toLocaleString('es-ES',{minimumFractionDigits:1,maximumFractionDigits:1})+' %';
  kbox.append(kpi('Valor cotización actual',fmtE(PT),`Invertido: ${fmtE(PI)}`),
-  kpi('DYOC',((sum(DV,r=>r.dg||0)/sum(DV,r=>r.inv))*100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' %'),
+  el('div',{class:'panel kpi',style:`border-top:3px solid ${KR>=0?C.good:C.bad}`},el('div',{class:'l'},'Rentabilidad con dividendos'),el('div',{class:'v',style:`color:${KR>=0?C.good:C.bad}`},pcs(KR)),el('div',{class:'l2'},`${KG+KD>=0?'+':'−'}${fmtE(Math.abs(KG+KD))} · sin dividendos ${pcs(KG/KI)}`)),
   kpi('Growth',fmtE(sum(pG,pv)),`${Math.round(sum(pG,pv)/PT*100)} % de la cartera`,GC.Growth),
   kpi('Dividenderas',fmtE(sum(pD,pv)),`${Math.round(sum(pD,pv)/PT*100)} % de la cartera`,GC.Dividendera),
-  kpi('Nota media ponderada',Math.round(pScore)+'/100'),
-  kpi('Acciones',String(P.length)));}
+  kpi('DYOC',((sum(DV,r=>r.dg||0)/sum(DV,r=>r.inv))*100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' %'),
+  kpi('Acciones',String(P.length)));
+ const gs=document.getElementById('gScore');if(gs){gs.textContent=Math.round(pScore)+'/100';gs.style.color=pScore>=75?C.good:pScore>=55?C.warn:C.bad;}}
 
 
 (function donut(){const s=document.getElementById('donut');let a=-Math.PI/2;const cx=95,cy=95,ro=88,ri=58;
@@ -568,7 +606,7 @@ function drawKPIs(){kbox.textContent='';
  const t2=sv('text',{x:95,y:116,'text-anchor':'middle','font-size':14,fill:'#8A9BB8'});t2.textContent='Sana';s.append(t1,t2);})();
 document.getElementById('dlegend').append(...groups.map((g,i)=>gn[i]===0?null:el('div',{class:'hrow'},el('span',{class:'dot',style:`background:${gradeColor(g)}`}),el('span',{},`${g}`,el('small',{},`${gn[i]} empresa${gn[i]===1?'':'s'} · ${fmtE(gv[i])}`)),el('b',{style:`color:${gradeColor(g)}`},`${Math.round(gv[i]/KT*100)} %`))).filter(Boolean));
 document.getElementById('ghealth').append(el('div',{class:'kicker'},'Salud dentro de cada grupo'),...['Dividendera','Growth'].map(g=>{const rs=KEPT.filter(r=>r.grp===g);const t=sum(rs,r=>r.valor);
- return el('div',{class:'ghr'},el('span',{style:'display:flex;gap:6px;align-items:center'},el('span',{class:'dot',style:`background:${GC[g]}`}),GNAME[g]),el('div',{class:'gbar'},groups.map(s=>{const v=sum(rs.filter(r=>r.grade===s),r=>r.valor);return v?el('i',{style:`width:${v/t*100}%;background:${gradeColor(s)}`,title:`${s}: ${fmtE(v)}`}):null;})),el('b',{class:'num',style:'text-align:right'},Math.round(wavg(rs))+''));}));
+ return el('div',{class:'ghr'},el('span',{style:'display:flex;gap:6px;align-items:center'},el('span',{class:'dot',style:`background:${GC[g]}`}),GNAME[g]),el('div',{class:'gbar'},groups.map(s=>{const v=sum(rs.filter(r=>r.grade===s),r=>r.valor);return v?el('i',{style:`width:${v/t*100}%;background:${gradeColor(s)}`,title:`${s}: ${fmtE(v)}`}):null;})),el('b',{class:'num',style:'text-align:right'},Math.round(wavg(rs))+''));}),el('div',{class:'ghr gglobal',title:'Nota media ponderada de la cartera tras el plan'},el('span',{style:'font-weight:600'},'Nota global'),el('div',{class:'gbar'},groups.map(s=>{const v=sum(KEPT.filter(r=>r.grade===s),r=>r.valor);return v?el('i',{style:`width:${v/KT*100}%;background:${gradeColor(s)}`,title:`${s}: ${fmtE(v)}`}):null;})),el('b',{class:'num',id:'gScore',style:'text-align:right;font-size:18px'},'')));
 
 // ---- plan
 const sells=R.filter(r=>r.act==='Vender');const moves=R.filter(r=>r.move);
@@ -772,31 +810,47 @@ const fsOk=(document.fullscreenEnabled||document.webkitFullscreenEnabled)&&windo
 if(!fsOk||!(de.requestFullscreen||de.webkitRequestFullscreen)||scMovil||scStandalone())fsb.hidden=true;
 
 // ---- Resumen: gráficos nuevos
-(function secPnl(){const box=document.getElementById('secPnl');let mode='sec';
- const tabs=el('div',{class:'pnltabs'});const tot=el('div',{class:'pnltot'});const chart=el('div',{class:'cchart'});box.append(tabs,tot,chart);
+(function secPnl(){const box=document.getElementById('secPnl');let mode='sec',withDiv=true;
+ const bar=el('div',{class:'pnltabs'});const tot=el('div',{class:'pnltot'});const chart=el('div',{class:'cchart'});box.append(bar,tot,chart);
  const pc=v=>(v>=0?'+':'−')+(Math.abs(v)*100).toLocaleString('es-ES',{maximumFractionDigits:1})+' %';const eu=v=>(v>=0?'+':'−')+fmtE(Math.abs(v));
- function data(){if(mode==='sec'){const by={};KEPT.forEach(r=>{const o=by[r.sector]=by[r.sector]||{v:0,i:0,n:0};o.v+=r.valor;o.i+=r.inv;o.n++;});
-   return Object.entries(by).map(([k,o])=>({lab:k,sub:o.n+' acc.',g:o.v-o.i,p:o.i?(o.v-o.i)/o.i:0}));}
-  return KEPT.filter(r=>r.inv>0).map(r=>({r,lab:r.name,sub:r.sector,g:r.valor-r.inv,p:(r.valor-r.inv)/r.inv}));}
- function draw(){tabs.textContent='';[['sec','Por sector'],['acc','Por acción']].forEach(([k,t])=>tabs.append(el('button',{class:'chip'+(mode===k?' on':''),onclick:()=>{mode=k;draw();}},t)));
-  const L=data().sort((a,b)=>b.p-a.p);const tg=sum(L,x=>x.g),ti=sum(KEPT,r=>r.inv),npos=L.filter(x=>x.g>=0).length;
+ function data(){const mk=(lab,sub,rs,r)=>{const v=sum(rs,x=>x.valor),i=sum(rs,x=>x.inv),d=withDiv?sum(rs,x=>x.dg||0):0;return {r,lab,sub,g:v-i,d,i,p:i?(v-i)/i:0,pd:i?d/i:0,t:i?(v-i+d)/i:0};};
+  if(mode==='sec'){const by={};KEPT.forEach(r=>{(by[r.sector]=by[r.sector]||[]).push(r);});return Object.entries(by).map(([k,rs])=>mk(k,rs.length+' acc.',rs));}
+  const g=mode==='grw'?'Growth':'Dividendera';return KEPT.filter(r=>r.grp===g&&r.inv>0).map(r=>mk(r.name,r.sector,[r],r));}
+ function draw(){bar.textContent='';
+  [['sec','Por sector'],['grw','Acc. Growth'],['div','Acc. Dividenderas']].forEach(([k,t])=>bar.append(el('button',{class:'chip'+(mode===k?' on':''),onclick:()=>{mode=k;draw();}},t)));
+  bar.append(el('button',{class:'chip divtog'+(withDiv?' on':''),onclick:()=>{withDiv=!withDiv;draw();}},withDiv?'✓ Con dividendos':'Sin dividendos'));
+  const L=data().sort((a,b)=>b.t-a.t);const tg=sum(L,x=>x.g),td=sum(L,x=>x.d),ti=sum(L,x=>x.i),npos=L.filter(x=>x.t>=0).length;const tt=tg+td;
   tot.textContent='';tot.append(
-   el('div',{class:'pstat'},el('span',{},'G/P'),el('b',{class:'num',style:`color:${tg>=0?C.good:C.bad}`},eu(tg))),
-   el('div',{class:'pstat'},el('span',{},'Rent.'),el('b',{class:'num',style:`color:${tg>=0?C.good:C.bad}`},pc(tg/ti))),
-   el('small',{class:'pcount'},`${npos} en positivo · ${L.length-npos} en negativo`));
-  // columnas: altura según la rentabilidad (%)
-  const pmax=Math.max(0,...L.map(x=>x.p)),nmax=Math.max(0,...L.map(x=>-x.p)),span=(pmax+nmax)||1;
-  const W=chart.clientWidth||900,cw=W/L.length,narrow=cw<46,PH=narrow?200:180;
-  const zt=pmax/span*PH,tiny=cw<13,xb=(nmax&&!tiny)?(narrow?46:36):6;chart.textContent='';chart.classList.toggle('narrow',narrow);chart.style.paddingTop=tiny?'10px':'';
+   el('div',{class:'pstat'},el('span',{},'G/P'),el('b',{class:'num',style:`color:${tt>=0?C.good:C.bad}`},eu(tt))),
+   el('div',{class:'pstat'},el('span',{},'Rent.'),el('b',{class:'num',style:`color:${tt>=0?C.good:C.bad}`},pc(tt/ti))),
+   withDiv?el('div',{class:'pstat'},el('span',{},'Dividendos'),el('b',{class:'num',style:'color:#00F0FF'},'+'+fmtE(td))):null,
+   el('small',{class:'pcount'},`${npos} en positivo · ${L.length-npos} en negativo`+(withDiv?' · columna rayada = dividendos cobrados':'')));
+  const top=x=>Math.max(0,x.p)+x.pd,bot=x=>Math.max(0,-x.p);
+  const tops=L.map(top).sort((a,b)=>b-a),pmaxR=tops[0]||0,pmax=(tops.length>1&&pmaxR>tops[1]*1.35)?tops[1]*1.35:pmaxR,nmax=Math.max(0,...L.map(bot)),span=(pmax+nmax)||1;
+  const W=chart.clientWidth||900,cw=W/L.length,narrow=cw<46,tiny=cw<13;
+  const PH=window.SC_FIT?Math.max(150,Math.min(460,(window.SC_FIT()-chart.getBoundingClientRect().top)-(narrow?58:44)-(narrow&&mode==='sec'?88:46)-(nmax&&!tiny?(narrow?46:36):6))):300,zt=pmax/span*PH,xb=(nmax&&!tiny)?(narrow?46:36):6;
+  chart.textContent='';chart.classList.toggle('narrow',narrow&&mode==='sec');chart.classList.toggle('narrowv',narrow);chart.style.paddingTop=tiny?'10px':'';
   const area=el('div',{class:'carea',style:`height:${PH+xb}px`});area.append(el('i',{class:'czero',style:`top:${zt}px`}));chart.append(area);
   const labs=el('div',{class:'clabs'});chart.append(labs);
-  L.forEach((x,i)=>{const pos=x.g>=0,col=pos?C.good:C.bad,h=Math.max(Math.abs(x.p)/span*PH,2);
-   const c=el('div',{class:'ccol',title:`${x.lab}: ${pc(x.p)} · ${eu(x.g)}`,style:`left:${i/L.length*100}%;width:${100/L.length}%`,onclick:x.r?()=>openD(x.r):null});
-   c.append(el('i',{class:'cbar',style:`top:${pos?zt-h:zt}px;height:${h}px;background:${col}`}));
-   const v=tiny?null:el('div',{class:'cval'+(narrow?' vert':''),style:pos?`bottom:${PH+xb-zt+h+4}px`:`top:${zt+h+4}px`},el('b',{style:`color:${col}`},pc(x.p)),narrow?null:el('small',{},eu(x.g)));
-   if(v)c.append(v);area.append(c);
+  L.forEach((x,i)=>{const pos=x.t>=0,col=pos?C.good:C.bad,pcol=x.p>=0?C.good:C.bad;
+   let hp=Math.abs(x.p)/span*PH,hd=x.pd/span*PH;const cut=x.p>=0&&top(x)>pmax;if(cut){const k=pmax/top(x);hp*=k;hd*=k;}
+   const c=el('div',{class:'ccol',title:`${x.lab}: ${pc(x.t)} (cotización ${pc(x.p)}${withDiv?', dividendos '+pc(x.pd):''}) · ${eu(x.g+x.d)}`,style:`left:${i/L.length*100}%;width:${100/L.length}%`,onclick:x.r?()=>openD(x.r):null});
+   if(hp)c.append(el('i',{class:'cbar',style:`top:${x.p>=0?zt-hp:zt}px;height:${Math.max(hp,1.5)}px;background:${pcol}`}));
+   const dTop=(x.p>=0?zt-hp:zt)-hd;
+   if(hd)c.append(el('i',{class:'cbar cdiv',style:`top:${dTop}px;height:${hd}px`}));
+   const upTop=Math.min(x.p>=0?zt-hp:zt,dTop);
+   const v=tiny?null:el('div',{class:'cval'+(narrow?' vert':''),style:pos||hd?`bottom:${PH+xb-upTop+4}px`:`top:${zt+hp+4}px`},el('b',{style:`color:${col}`},pc(x.t)),narrow?null:el('small',{},eu(x.g+x.d)));
+   if(cut)c.append(el('i',{class:'cbreak',style:`top:${zt-hp*0.55}px`}));if(v)c.append(v);area.append(c);
    labs.append(el('div',{class:'clab',style:`width:${100/L.length}%`},x.r&&!tiny?lg(x.r,narrow?Math.min(18,Math.max(10,cw-4)):20):null,narrow&&x.r?null:el('span',{},x.lab)));});}
- draw();let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(draw,150);});})();
+ window.scPnlDraw=draw;draw();let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(draw,150);});})();
+// Ganancias y pérdidas: se abre a pantalla completa desde la tarjeta de salud
+(function(){const opt='B';
+ const pnl=document.getElementById('secPnl').closest('section');
+  if(opt==='B'){pnl.hidden=true;pnl.dataset.tab='x';const hb=document.querySelector('.hero .panel');hb.style.position='relative';
+  const ov=el('div',{class:'pnlov',hidden:''});document.body.append(ov);
+  hb.append(el('button',{class:'ibtn expbtn',title:'Ver ganancias y pérdidas a pantalla completa',onclick:()=>{ov.hidden=false;ov.append(pnl);pnl.hidden=false;window.SC_FIT=()=>innerHeight-30;scPnlDraw();}},'⤢'));
+  ov.addEventListener('click',e=>{if(e.target===ov){ov.hidden=true;}});
+  pnl.querySelector('.panel').prepend(el('button',{class:'ibtn closebtn',onclick:()=>{ov.hidden=true;}},'✕'));}})();
 
 // ---- Datos: exportar e importar JSON
 const info=document.getElementById('dataInfo'),rb=document.getElementById('resetBtn'),msg=document.getElementById('impMsg');
