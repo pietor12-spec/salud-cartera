@@ -277,6 +277,25 @@ svg text{font-family:var(--mono)}
 .bigbtn:hover{background:rgba(0,240,255,.2)}.bigbtn.ghost{border-color:var(--line);color:var(--ink);background:var(--panel2)}
 .two{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
 [hidden]{display:none!important}
+/* Resumen: KPIs a la altura del gráfico de salud */
+.hero > .kpis{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr;align-content:stretch}
+.hero > .kpis .kpi{display:flex;flex-direction:column;justify-content:center}
+@media(max-width:820px){.hero > .kpis{grid-auto-rows:auto}}
+/* Ganancia por sector */
+.pnltot{display:flex;justify-content:space-between;align-items:center;padding:0 0 10px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+.pnltot b{font-size:18px}
+.pnlrow{display:grid;grid-template-columns:190px minmax(0,1fr) 120px;gap:10px;align-items:center;padding:5px 0}
+.pnln{display:flex;flex-direction:column;font-size:14px;line-height:1.2}.pnln small,.pnlv small{color:var(--mute);font-size:11px}
+.pnlbar{position:relative;height:16px;background:var(--panel2);border-radius:5px}
+.pnlbar i{position:absolute;top:0;bottom:0;border-radius:4px}
+.pnlbar i.mid{left:50%;width:1px;background:var(--mute);opacity:.6;border-radius:0}
+.pnlv{display:flex;flex-direction:column;text-align:right;font-size:13px;line-height:1.2}
+@media(max-width:600px){.pnlrow{grid-template-columns:105px minmax(0,1fr) 90px;gap:8px}.pnln{font-size:12px}}
+.pnltabs{display:flex;gap:8px;margin-bottom:12px}
+.pnltot small{color:var(--mute);font-size:12px;margin-left:6px}
+button.pnln{background:none;border:0;color:var(--ink);font:inherit;text-align:left;cursor:pointer;padding:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
+.pnltot{flex-wrap:wrap;gap:4px}
+button.pnln:hover{color:var(--accent)}
 
 </style>
 </head>
@@ -292,7 +311,6 @@ svg text{font-family:var(--mono)}
   <nav class="menu" id="menu" role="menu" hidden><button class="mitem" role="menuitem" data-go="resumen"><span class="mi">◎</span>Resumen</button><button class="mitem" role="menuitem" data-go="plan"><span class="mi">⇄</span>Plan</button><button class="mitem" role="menuitem" data-go="grupos"><span class="mi">▦</span>Tus grupos y watchlist</button><button class="mitem" role="menuitem" data-go="calor"><span class="mi">▤</span>Mapa de calor</button><button class="mitem" role="menuitem" data-go="sectores"><span class="mi">◐</span>Sectores y países</button><button class="mitem" role="menuitem" data-go="diag"><span class="mi">✚</span>Diagnóstico</button><button class="mitem" role="menuitem" data-go="guia"><span class="mi">?</span>Cómo se calcula</button><button class="mitem" role="menuitem" data-go="datos"><span class="mi">⇅</span>Datos</button></nav>
 </div>
 
-<section data-tab="resumen" class="tabhead"><div class="kicker" id="kFecha"></div><h2 style="font-size:26px">Resumen</h2></section>
 <section class="hero" data-tab="resumen">
   <div class="panel">
     <h3 style="font-size:18px;margin-bottom:2px">Salud de la cartera</h3><div class="kicker" style="margin-bottom:10px">Acciones que te quedas, por valor</div>
@@ -304,15 +322,11 @@ svg text{font-family:var(--mono)}
   <div class="grid kpis" id="kpis"></div>
 </section>
 
-<section data-tab="resumen" class="grid rsum">
-  <div class="panel"><h3 style="font-size:17px">Notas de tus acciones</h3><p class="note" style="margin:2px 0 10px">Cuántas acciones caen en cada tramo de nota (las que te quedas).</p><div id="histo"></div></div>
-  <div class="panel"><h3 style="font-size:17px">¿Caras o baratas?</h3><p class="note" style="margin:2px 0 10px">Precio de cada acción según su modelo, por valor invertido hoy.</p><div id="precioMix"></div></div>
-  <div class="panel"><h3 style="font-size:17px">Las más sanas</h3><p class="note" style="margin:2px 0 10px">Las 5 con mejor nota. Pulsa para ver el detalle.</p><div class="toplist" id="topBest"></div></div>
-  <div class="panel"><h3 style="font-size:17px">Las que más vigilar</h3><p class="note" style="margin:2px 0 10px">Las 5 con peor nota de las que te quedas.</p><div class="toplist" id="topWorst"></div></div>
-  <div class="panel" style="grid-column:1/-1"><h3 style="font-size:17px">Peso y salud por sector</h3><p class="note" style="margin:2px 0 10px">Cada barra es el valor del sector; el color, la salud de sus empresas.</p><div id="secHealth"></div></div>
+<section data-tab="resumen">
+  <div class="panel"><h3 style="font-size:17px">Ganancias y pérdidas</h3><p class="note" style="margin:2px 0 12px">Valor actual frente a lo invertido, en las acciones que te quedas. Verde gana, rojo pierde.</p><div id="secPnl"></div></div>
 </section>
 <section data-tab="plan">
-  <h2><span class="n">01</span><span id="planTitle">Plan</span></h2>
+  <h2><span id="planTitle">Plan</span></h2>
   <p class="sub" style="margin:6px 0 14px">Vendes todo el grupo Ventas, que ya incluye Acciona, y completas los huecos con empresas de la watchlist (elígelas abajo). Al final solo quedan Dividenderas y Growth. Neinor se queda, como has decidido.</p>
   <div class="flow">
     <div class="panel stack" id="fNow"></div>
@@ -332,7 +346,7 @@ svg text{font-family:var(--mono)}
 </section>
 
 <section data-tab="grupos">
-  <h2><span class="n">02</span>Tus grupos y la watchlist</h2>
+  <h2>Tus grupos y la watchlist</h2>
   <div class="fbar" id="fbar"></div>
   <p class="sub" id="tabIntro" style="margin:0 0 14px"></p>
   <div class="grid acts" id="acts"></div>
@@ -341,19 +355,19 @@ svg text{font-family:var(--mono)}
 </section>
 
 <section data-tab="calor">
-  <h2><span class="n">03</span>Mapa de calor</h2>
+  <h2>Mapa de calor</h2>
   <p class="note" style="margin:6px 0 10px">Sigue los filtros de «Tus grupos». Verde cumple, ámbar justo, rojo falla, gris no aplica o sin dato.</p>
   <div id="heats" style="display:flex;flex-direction:column;gap:16px"></div>
 </section>
 
 <section data-tab="sectores">
-  <h2><span class="n">04</span>Sectores y países (las 71)</h2>
+  <h2>Sectores y países (las 71)</h2>
   <div class="grid two" style="margin-top:12px">
     <div class="panel">
       <h3 style="font-size:17px;margin-bottom:6px">Sectores</h3>
       <div class="legend-g" id="lg1" style="margin-bottom:12px"></div>
       <div class="sect" id="sectors"></div>
-      <p class="note" style="margin-top:10px">Barra = peso en la cartera, partida por grupo. A la derecha, su peso y la nota media del sector, ponderada por valor.</p>
+      <p class="note" style="margin-top:10px">Barra = peso en la cartera, partida por salud (sana, vigilar, riesgo). A la derecha, su peso y la nota media del sector, ponderada por valor.</p>
     </div>
     <div class="panel">
       <h3 style="font-size:17px;margin-bottom:6px">Países</h3>
@@ -364,12 +378,12 @@ svg text{font-family:var(--mono)}
 </section>
 
 <section class="diag" data-tab="diag">
-  <h2><span class="n">05</span>Diagnóstico de la cartera</h2>
+  <h2>Diagnóstico de la cartera</h2>
   <div class="panel"><ul id="diag"></ul></div>
 </section>
 
 <section data-tab="guia">
-  <h2><span class="n">06</span>Qué mirar en cada tipo de empresa</h2>
+  <h2>Qué mirar en cada tipo de empresa</h2>
   <p class="sub" style="margin:6px 0 12px">Una dividendera se juzga por si el dividendo es seguro; una Growth, por si crece con calidad y a un precio que lo justifique.</p>
   <div class="grid look">
     <div class="panel" style="border-top:4px solid var(--g2)"><h3>Growth: lo imprescindible</h3><ul><li>Ventas creciendo más del 15 % al año, pasado y esperado.</li><li>Margen operativo alto (más del 20 %): crecer sin ganar dinero no vale.</li><li>ROIC por encima del 15 %: cada euro invertido rinde.</li><li>Pocas acciones nuevas: los pagos en acciones diluyen.</li><li>PEG (PER adelantado ÷ crecimiento del BPA): por debajo de 1,2 es barata.</li></ul></div>
@@ -382,7 +396,7 @@ svg text{font-family:var(--mono)}
 </section>
 
 <section data-tab="guia">
-  <h2><span class="n">07</span>Cómo se calcula la nota</h2>
+  <h2>Cómo se calcula la nota</h2>
   <p class="sub" style="margin:6px 0 12px">Cada control da 2 puntos (verde), 1 (ámbar) o 0 (rojo), por su peso. La nota es el porcentaje sobre el máximo: 75 o más es <b style="color:var(--good)">sana</b>, de 55 a 74 <b style="color:var(--warn)">vigilar</b>, menos de 55 <b style="color:var(--bad)">riesgo</b>. El precio va aparte y no entra en la nota.</p>
   <h3 style="font-size:16px;margin:10px 0">Dividenderas</h3>
   <div class="grid rules" id="rules"></div>
@@ -527,14 +541,13 @@ function drawKPIs(){kbox.textContent='';
  const NEWW=D.wl.filter(w=>WLSEL.includes(w.k));const P=[...KEPT,...NEWW];const PT=sum(P,pv)+D.plan.rest;
  const pG=P.filter(r=>r.grp==='Growth'),pD=P.filter(r=>r.grp==='Dividendera'||r.grp==='Watchlist');
  pScore=(()=>{const s=P.filter(r=>r.score!=null&&pv(r)>0);return sum(s,r=>r.score*pv(r))/sum(s,pv);})();
- kbox.append(el('div',{class:'kicker',style:'grid-column:1/-1'},'Tu cartera tras el plan'),
+ const DV=KEPT.filter(r=>r.grp==='Dividendera');
+ kbox.append(kpi('DYOC',((sum(DV,r=>r.dg||0)/sum(DV,r=>r.inv))*100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' %'),
   kpi('Acciones',String(P.length)),
-  kpi('Valor cotización actual',fmtE(PT)),
   kpi('Growth',fmtE(sum(pG,pv)),`${Math.round(sum(pG,pv)/PT*100)} % de la cartera`,GC.Growth),
   kpi('Dividenderas',fmtE(sum(pD,pv)),`${Math.round(sum(pD,pv)/PT*100)} % de la cartera`,GC.Dividendera),
-  kpi('Nota media ponderada',Math.round(pScore)+'/100'));
- const DV=KEPT.filter(r=>r.grp==='Dividendera');
- kbox.append(kpi('DYOC',((sum(DV,r=>r.dg||0)/sum(DV,r=>r.inv))*100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' %'));}
+  kpi('Nota media ponderada',Math.round(pScore)+'/100'),
+  kpi('Valor cotización actual',fmtE(PT)));}
 
 
 (function donut(){const s=document.getElementById('donut');let a=-Math.PI/2;const cx=95,cy=95,ro=88,ri=58;
@@ -630,11 +643,11 @@ function renderGroup(){drawBar();
 renderGroup();
 
 // ---- barras sector y país (apiladas por grupo)
-['lg1','lg2'].forEach(id=>document.getElementById(id).append(...GROUPS.map(g=>el('span',{style:'display:flex;gap:5px;align-items:center'},el('span',{class:'dot',style:`background:${GC[g]}`}),GNAME[g]))));
-function bars(id,keyFn,labelFn){const m={};R.forEach(r=>{const k=keyFn(r);m[k]=m[k]||{v:0,n:0,g:{},rs:[]};m[k].v+=r.valor;m[k].n++;m[k].g[r.grp]=(m[k].g[r.grp]||0)+r.valor;m[k].rs.push(r);});
+['lg1','lg2'].forEach(id=>document.getElementById(id).append(...['Sana','Vigilar','Riesgo'].map(g=>el('span',{style:'display:flex;gap:5px;align-items:center'},el('span',{class:'dot',style:`background:${gradeColor(g)}`}),g))));
+function bars(id,keyFn,labelFn){const m={};R.forEach(r=>{const k=keyFn(r);m[k]=m[k]||{v:0,n:0,g:{},rs:[]};m[k].v+=r.valor;m[k].n++;m[k].g[r.grade]=(m[k].g[r.grade]||0)+r.valor;m[k].rs.push(r);});
  const arr=Object.entries(m).sort((a,b)=>b[1].v-a[1].v);const mx=arr[0][1].v;const box=document.getElementById(id);
  arr.forEach(([k,o])=>{const sc=wavg(o.rs);const col=sc==null?C.none:sc>=75?C.good:sc>=55?C.warn:C.bad;
-  const bar=el('div',{class:'sbar',style:'display:flex;background:transparent'},el('div',{style:`width:${o.v/mx*100}%;display:flex;border-radius:6px;overflow:hidden`},GROUPS.filter(g=>o.g[g]).map(g=>el('i',{style:`position:static;display:block;height:100%;width:${o.g[g]/o.v*100}%;background:${GC[g]};border-radius:0`,title:`${GNAME[g]}: ${fmtE(o.g[g])}`}))));
+  const bar=el('div',{class:'sbar',style:'display:flex;background:transparent'},el('div',{style:`width:${o.v/mx*100}%;display:flex;border-radius:6px;overflow:hidden`},groups.filter(g=>o.g[g]).map(g=>el('i',{style:`position:static;display:block;height:100%;width:${o.g[g]/o.v*100}%;background:${gradeColor(g)};border-radius:0`,title:`${g}: ${fmtE(o.g[g])}`}))));
   box.append(el('div',{class:'srow'},el('div',{class:'slab'},labelFn(k),el('small',{},`${o.n} empresa${o.n>1?'s':''} · ${fmtE(o.v)}`)),bar,
    el('div',{class:'num',style:'text-align:right;font-size:13px'},Math.round(o.v/total*100)+' % · ',el('b',{style:`color:${col}`},sc==null?'—':Math.round(sc)+''))));});}
 bars('sectors',r=>r.sector,k=>k);bars('countries',r=>r.ctry,k=>CTRY[k]||k);
@@ -749,29 +762,24 @@ const fsOk=(document.fullscreenEnabled||document.webkitFullscreenEnabled)&&windo
 if(!fsOk||!(de.requestFullscreen||de.webkitRequestFullscreen)||scMovil||scStandalone())fsb.hidden=true;
 
 // ---- Resumen: gráficos nuevos
-document.getElementById('kFecha').textContent='Datos del '+(D.fecha||'—')+' · '+KEPT.length+' acciones que te quedas';
-(function histo(){const B=Array.from({length:10},(_,i)=>({lo:i*10,n:0}));KEPT.forEach(r=>{if(r.score==null)return;B[Math.min(9,Math.floor(r.score/10))].n++;});
- const mx=Math.max(1,...B.map(b=>b.n));const W=480,H=170,bw=W/10;const s=sv('svg',{viewBox:`0 0 ${W} ${H+34}`,class:'chart',role:'img','aria-label':'Número de acciones por tramo de nota'});
- [75,55].forEach(t=>{const x=t/100*W;const l=sv('line',{x1:x,x2:x,y1:0,y2:H,stroke:t===75?C.good:C.warn,'stroke-dasharray':'3 3','stroke-width':1,opacity:.6});s.append(l);});
- B.forEach((b,i)=>{const h=b.n/mx*(H-18);const m=b.lo+5;const c=m>=75?C.good:m>=55?C.warn:C.bad;
-  const r=sv('rect',{x:i*bw+3,y:H-h,width:bw-6,height:Math.max(h,b.n?2:0),rx:3,fill:c});const t=sv('title');t.textContent=`Nota ${b.lo}-${b.lo+9}: ${b.n} acciones`;r.append(t);s.append(r);
-  if(b.n){const tx=sv('text',{x:i*bw+bw/2,y:H-h-5,'text-anchor':'middle','font-size':11,fill:'#E6EEFA','font-family':'JetBrains Mono'});tx.textContent=b.n;s.append(tx);}
-  const lx=sv('text',{x:i*bw+bw/2,y:H+15,'text-anchor':'middle','font-size':10,fill:'#8A9BB8','font-family':'JetBrains Mono'});lx.textContent=b.lo;s.append(lx);});
- const cap=sv('text',{x:W/2,y:H+31,'text-anchor':'middle','font-size':10,fill:'#8A9BB8'});cap.textContent='Nota (líneas: 55 vigilar · 75 sana)';s.append(cap);
- document.getElementById('histo').append(s);})();
-(function precio(){const cats=['Barata','Razonable','Cara',null];const nm=p=>p||'Sin precio';const v=cats.map(p=>sum(KEPT.filter(r=>(r.precio||null)===p),r=>r.valor));const n=cats.map(p=>KEPT.filter(r=>(r.precio||null)===p).length);const T=sum(v,x=>x)||1;
- const box=document.getElementById('precioMix');
- box.append(el('div',{class:'pbar'},cats.map((p,i)=>v[i]?el('i',{style:`width:${v[i]/T*100}%;background:${precioColor(p)}`,title:`${nm(p)}: ${fmtE(v[i])}`}):null)));
- box.append(el('div',{class:'plegend'},cats.map((p,i)=>n[i]?el('div',{class:'hrow'},el('span',{class:'dot',style:`background:${precioColor(p)}`}),el('span',{},nm(p),el('small',{},`${n[i]} empresa${n[i]===1?'':'s'} · ${fmtE(v[i])}`)),el('b',{style:`color:${precioColor(p)}`},Math.round(v[i]/T*100)+' %')):null)));})();
-(function tops(){const s=KEPT.filter(r=>r.score!=null);
- const item=r=>el('button',{class:'trow',onclick:()=>openD(r)},lg(r,22),el('span',{class:'tn'},r.name,el('small',{},GNAME[r.grp]+' · '+r.sector)),el('b',{class:'num',style:`color:${gradeColor(r.grade)}`},Math.round(r.score)));
- document.getElementById('topBest').append(...[...s].sort((a,b)=>b.score-a.score||b.valor-a.valor).slice(0,5).map(item));
- document.getElementById('topWorst').append(...[...s].sort((a,b)=>a.score-b.score||b.valor-a.valor).slice(0,5).map(item));})();
-(function secH(){const by={};KEPT.forEach(r=>{(by[r.sector]=by[r.sector]||[]).push(r);});const L=Object.entries(by).map(([k,rs])=>({k,rs,v:sum(rs,r=>r.valor)})).sort((a,b)=>b.v-a.v);const mx=L[0]?L[0].v:1;
- const box=document.getElementById('secHealth');
- L.forEach(x=>{const sc=wavg(x.rs);box.append(el('div',{class:'shrow'},el('span',{class:'shn'},x.k,el('small',{},x.rs.length+' acc.')),
-  el('div',{class:'shbar'},el('div',{style:`width:${x.v/mx*100}%;display:flex;height:100%`},groups.map(g=>{const v=sum(x.rs.filter(r=>r.grade===g),r=>r.valor);return v?el('i',{style:`width:${v/x.v*100}%;background:${gradeColor(g)}`,title:`${g}: ${fmtE(v)}`}):null;}))),
-  el('span',{class:'num shv'},fmtE(x.v),el('small',{style:`color:${sc==null?'#8A9BB8':sc>=75?C.good:sc>=55?C.warn:C.bad}`},sc==null?'—':'nota '+Math.round(sc)))));});})();
+(function secPnl(){const box=document.getElementById('secPnl');let mode='sec';
+ const tabs=el('div',{class:'pnltabs'});const list=el('div');box.append(tabs,list);
+ const pc=v=>(v>=0?'+':'')+(v*100).toLocaleString('es-ES',{maximumFractionDigits:1})+' %';const eu=v=>(v>=0?'+':'−')+fmtE(Math.abs(v));
+ function draw(){tabs.textContent='';[['sec','Por sector'],['acc','Por acción']].forEach(([k,t])=>tabs.append(el('button',{class:'chip'+(mode===k?' on':''),onclick:()=>{mode=k;draw();}},t)));
+  list.textContent='';let L;
+  if(mode==='sec'){const by={};KEPT.forEach(r=>{const o=by[r.sector]=by[r.sector]||{v:0,i:0,n:0};o.v+=r.valor;o.i+=r.inv;o.n++;});
+   L=Object.entries(by).map(([k,o])=>({lab:k,sub:o.n+' acc.',g:o.v-o.i,p:o.i?(o.v-o.i)/o.i:0}));}
+  else L=KEPT.filter(r=>r.inv>0).map(r=>({r,lab:r.name,sub:r.sector,g:r.valor-r.inv,p:(r.valor-r.inv)/r.inv}));
+  L.sort((a,b)=>b.g-a.g);
+  const tg=sum(L,x=>x.g),ti=sum(KEPT,r=>r.inv),npos=L.filter(x=>x.g>=0).length;
+  const pmax=Math.max(0,...L.map(x=>x.g)),nmax=Math.max(0,...L.map(x=>-x.g)),span=(pmax+nmax)||1,z=nmax/span*100;
+  list.append(el('div',{class:'pnltot'},el('span',{},'Total ',el('small',{},`${npos} en positivo · ${L.length-npos} en negativo`)),el('b',{class:'num',style:`color:${tg>=0?C.good:C.bad}`},eu(tg)+' · '+pc(tg/ti))));
+  L.forEach(x=>{const pos=x.g>=0,col=pos?C.good:C.bad,w=Math.abs(x.g)/span*100;
+   const name=x.r?el('button',{class:'pnln pname',onclick:()=>openD(x.r)},el('span',{style:'display:flex;gap:6px;align-items:center'},lg(x.r,18),x.lab),el('small',{},x.sub)):el('span',{class:'pnln'},x.lab,el('small',{},x.sub));
+   list.append(el('div',{class:'pnlrow',title:`${x.lab}: ${eu(x.g)}`},name,
+    el('div',{class:'pnlbar'},nmax?el('i',{class:'mid',style:`left:${z}%`}):null,el('i',{style:`left:${pos?z:z-w}%;width:${Math.max(w,.6)}%;background:${col}`})),
+    el('span',{class:'num pnlv',style:`color:${col}`},eu(x.g),el('small',{},pc(x.p)))));});}
+ draw();})();
 
 // ---- Datos: exportar e importar JSON
 const info=document.getElementById('dataInfo'),rb=document.getElementById('resetBtn'),msg=document.getElementById('impMsg');
